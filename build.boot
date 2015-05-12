@@ -135,7 +135,7 @@
   (set-env!
     :source-paths #{"src-clr"}
     :target-path "target/clr")
-  (let [exe "fn.exe"]
+  (let [exe "FnEdit.exe"]
     (comp
       (clr-include)
       (if watch-flag (watch) (identity-task))

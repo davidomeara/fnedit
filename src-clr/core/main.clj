@@ -4,7 +4,7 @@
 (assembly-load-with-partial-name "CefSharp.WinForms")
 
 (ns core.main
-  (:gen-class :name "fn")
+  (:gen-class :name "FnEdit")
   (:require [core.clojure-clr-wrapper :refer (->Wrapper)])
   (:import
     (System.IO
