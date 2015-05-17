@@ -9,15 +9,15 @@
 (defn line-widget [value]
   (let [div (.createElement js/document "div")]
     (reagent/render-component
-     (fn []
-       [:div [:pre value]])
-     div)
+      (fn []
+        [:div [:pre value]])
+      div)
     div))
 
 (defn clear-line-widgets [cm]
   (.eachLine
-   (.-doc cm)
-   #(when (.-widgets %)
+    (.-doc cm)
+    #(when (.-widgets %)
       (let [widgets (.slice (.-widgets %))]
         (doseq [i (range (alength widgets))]
           (.clear (aget widgets i)))))))
@@ -30,21 +30,19 @@
           line-handle (.getLineHandle doc line)
           div (line-widget value)]
       (.addLineWidget cm line-handle div
-                      (clj->js {:handleMouseEvents true})))))
+        (clj->js {:handleMouseEvents true})))))
 
 (defn widgets-height [cm cursor]
   (reduce
-   (fn [a widget]
-     (+ a (-> widget .-node .-scrollHeight)))
-   0
-   (-> cm
-       (.lineInfo (.-line cursor))
-       .-handle
-       .-widgets)))
+    (fn [a widget]
+      (+ a (-> widget .-node .-scrollHeight)))
+    0
+    (-> cm
+      (.lineInfo (.-line cursor))
+      .-handle
+      .-widgets)))
 
 (defn reset-scroll [cm]
-  ;; Looks stupid, but we have to call this twice.
-  (.scrollIntoView cm)
   (let [cursor (-> cm .-doc .getCursor)
         coords (.charCoords cm cursor "local")
         height (widgets-height cm cursor)]
@@ -52,9 +50,12 @@
     (.scrollIntoView cm coords 2)))
 
 (defn evaluate-script-results [cm results]
-  (clear-line-widgets cm)
-  (doseq [[[_ to] v] (sort-by #(first (first %)) results)]
-    (add-line-widget cm to v))
+  (.operation cm
+    (fn []
+      (clear-line-widgets cm)
+      (doseq [[[_ to] v] (sort-by #(first (first %)) results)]
+        (add-line-widget cm to v))
+      (.refresh cm)))
   (reset-scroll cm))
 
 (defn get-cm [this]
@@ -68,24 +69,24 @@
 
 (def placeholder-text
   (str "Code goes here...\n\n"
-       "Key commands:\n"
-       "  Ctrl-Enter evaluates selected and adjacent forms\n"
-       "  Ctrl-Shift-Enter evaluates the entire file"))
+    "Key commands:\n"
+    "  Ctrl-Enter evaluates selected and adjacent forms\n"
+    "  Ctrl-Shift-Enter evaluates the entire file"))
 
 (defn count-inserted [c]
   (let [char-count (reduce + (map count (.-text c)))
         newline-count (- (count (.-text c)) 1)]
     (+ char-count
-       newline-count)))
+      newline-count)))
 
 (defn make-on-before-change [out]
   (fn [cm c]
     (let [doc (.-doc cm)]
       (put! out
-            [:before-change
-             [(-> doc (.indexFromPos (.-from c)))
-              (count-inserted c)
-              (-> doc (.indexFromPos (.-to c)))]]))))
+        [:before-change
+         [(-> doc (.indexFromPos (.-from c)))
+          (count-inserted c)
+          (-> doc (.indexFromPos (.-to c)))]]))))
 
 (defn make-editor [opened channel]
   (let [before-change (make-on-before-change channel)
