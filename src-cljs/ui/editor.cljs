@@ -112,7 +112,7 @@
                     (reagent/dom-node this)
                     (clj->js {:value (:text @opened)
                               :tabindex 20
-                              :lineNumbers false
+                              :lineNumbers true
                               :styleActiveLine true
                               :lineWrapping false
                               :foldGutter true
