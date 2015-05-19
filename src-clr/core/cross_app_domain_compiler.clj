@@ -58,7 +58,7 @@
     (.SetData "data" data)
     (.DoCallBack (create-delegate))))
 
-(defn aot-compile [data _]
+(defn aot-compile [data & _]
   (let [app-domain (compile-on-new-app-domain data)
         result (.GetData app-domain "result")]
     (AppDomain/Unload app-domain)

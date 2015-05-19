@@ -58,7 +58,7 @@
            [widgets/positive-button "OK" 1 (delay true) #(put! out [:ok @input-atom])]]]]))))
 
 (defn aot-compile
-  "state {:result string :compiling? bool}, out [:compile string] [:cancel nil]"
+  "state {:result string :compiling? bool}, out [:compile string] [:close nil]"
   [state out]
   (fn []
     (let [input-atom (reagent/atom "")]
@@ -82,9 +82,10 @@
             #(put! out [:compile @input-atom])]]
           [:div {:style {:display "flex"
                          :flex-direction "row-reverse"}}
-           [widgets/negative-button "Close" 2 (delay true) #(put! out [:cancel nil])]
-           [widgets/positive-button "Compile" 1 (delay true) #(put! out [:ok @input-atom])]]
-          [:textarea {:value "qwerty"
+           [widgets/negative-button "Close" 2 (delay true) #(put! out [:close nil])]
+           [widgets/positive-button "Compile" 1 (delay true) #(put! out [:compile @input-atom])]]
+          [:textarea {:on-submit #(stop-event %)
+                      :value "qwerty"
                       :readOnly true
                       :style {:display "flex"
                               :flex-direction "row"
