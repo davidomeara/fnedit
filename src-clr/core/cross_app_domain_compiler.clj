@@ -2,7 +2,8 @@
   (:gen-class
    :name "CrossAppDomainCompiler"
    :main false
-   :methods [^:static [Compile [] void]]))
+   :methods [^:static [DummyWork [] void]
+             ^:static [Compile [] void]]))
 
 (defn pt [s]
   (println s)
@@ -42,24 +43,41 @@
         (catch Exception ex (.get_Message ex))))
     exception))
 
+(defn -DummyWork []
+  (+ 1 1))
+
 (defn -Compile []
   (let [{:keys [path top-ns]} (.GetData (AppDomain/CurrentDomain) "data")
         target-result (create-target-dir path)]
     (->> (do-compile path top-ns target-result)
          (.SetData (AppDomain/CurrentDomain) "result"))))
 
-(defn create-delegate []
+(defn create-delegate [method-name]
   (Delegate/CreateDelegate
    |CrossAppDomainDelegate|
-   (.GetMethod (.GetType (CrossAppDomainCompiler.)) "Compile")))
+   (.GetMethod (.GetType (CrossAppDomainCompiler.)) method-name)))
 
-(defn compile-on-new-app-domain [data]
-  (doto (AppDomain/CreateDomain "tmp")
+(defn create-app-domain []
+  (future
+    (doto (AppDomain/CreateDomain (.ToString (Guid/NewGuid)))
+      ; This forces the Clojure runtime to be pulled in so we
+      ; have a "hot" Clojure runtime available waiting for
+      ; user to start compilation.
+      (.DoCallBack (create-delegate "DummyWork")))))
+
+(def app-domain (atom (create-app-domain)))
+
+(defn compile-on-tmp-app-domain [data]
+  (doto @@app-domain
     (.SetData "data" data)
-    (.DoCallBack (create-delegate))))
+    (.DoCallBack (create-delegate "Compile"))))
 
-(defn aot-compile [data & _]
-  (let [app-domain (compile-on-new-app-domain data)
-        result (.GetData app-domain "result")]
-    (AppDomain/Unload app-domain)
+(defn aot-compile
+  "Compile in a separate app domain which is then unloaded.
+   This prevents dlls from locking up when doing AOT compilation."
+  [data & _]
+  (compile-on-tmp-app-domain data)
+  (let [result (.GetData @@app-domain "result")]
+    (AppDomain/Unload @@app-domain)
+    (reset! app-domain (create-app-domain))
     result))
