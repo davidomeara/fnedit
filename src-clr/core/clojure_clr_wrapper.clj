@@ -1,9 +1,9 @@
 (ns core.clojure-clr-wrapper
   (:require [core.core :as c]
-    [core.fs])
+            [core.fs])
   (:import
-    (System.Threading.Tasks
-      Task)))
+   (System.Threading.Tasks
+    Task)))
 
 (defn- filter-null-terminator
   "Needed because Chrome stops reading when it encounters a C
@@ -14,10 +14,10 @@
     c))
 
 (defn- filter-UCS2
-  " Javascript only supports UCS-2, while .Net is UTF-16.  Filter out
-    characters outside the UCS-2 range.  Not entirely sure if this is
-    necessary.  I couldn't get clojure to return these chars without
-    throwing an error."
+  "Javascript only supports UCS-2, while .Net is UTF-16.  Filter out
+   characters outside the UCS-2 range.  Not entirely sure if this is
+   necessary.  I couldn't get clojure to return these chars without
+   throwing an error."
   [c]
   (let [limit \uFFFF]
     (if (> c limit)
@@ -30,8 +30,8 @@
     (map filter-null-terminator)
     (apply str)))
 
-(defn- evaluate [from to forms]
-  (->> (c/read-eval from to forms)
+(defn- evaluate [dir from to forms]
+  (->> (c/read-eval dir from to forms)
     (filter-chars)))
 
 (defn pt [s]
@@ -46,46 +46,46 @@
 
 (defn- simple-eval [wrapper forms]
   (-> forms
-    read-string
-    (conj 'partial)
-    eval
-    (exec wrapper)
-    pr-str
-    filter-chars))
+      read-string
+      (conj 'partial)
+      eval
+      (exec wrapper)
+      pr-str
+      filter-chars))
 
 (defn- simple-async-eval [wrapper forms]
   (-> (simple-eval wrapper forms)
-    pr-str
-    (->> (str "ui.clr.put_async_channel("))
-    (str ");")
-    (->> (.EvaluateScriptAsync (:browser wrapper)))))
+      pr-str
+      (->> (str "ui.clr.put_async_channel("))
+      (str ");")
+      (->> (.EvaluateScriptAsync (:browser wrapper)))))
 
 (defprotocol PWrapper
   (AsyncEval [this forms])
   (WinformsAsyncEval [this forms])
   (SyncEval [this forms])
-  (WinformsSyncEval [this from to forms]))
+  (WinformsSyncEval [this dir from to forms]))
 
 (defrecord Wrapper [browser debug?]
   PWrapper
 
   (AsyncEval
-    [this forms]
-    (Task/Run (gen-delegate Action [] (simple-async-eval this forms)))
-    nil)
+   [this forms]
+   (Task/Run (gen-delegate Action [] (simple-async-eval this forms)))
+   nil)
 
   (WinformsAsyncEval
-    [this forms]
-    (.Invoke
-      (:browser this)
-      (gen-delegate Action [] (simple-async-eval this forms))))
+   [this forms]
+   (.Invoke
+    (:browser this)
+    (gen-delegate Action [] (simple-async-eval this forms))))
 
   (SyncEval
-    [this forms]
-    (simple-eval this forms))
+   [this forms]
+   (simple-eval this forms))
 
   (WinformsSyncEval
-    [this from to forms]
-    (.Invoke
-      (:browser this)
-      (sys-func [String] [] (evaluate from to forms)))))
+   [this dir from to forms]
+   (.Invoke
+    (:browser this)
+    (sys-func [String] [] (evaluate dir from to forms)))))

@@ -76,9 +76,9 @@
     opened
     #(put! out [:evaluate-script nil])]
 
-   #_[button
-    [:span [:span.icon.icon-gift] "AOT Compile"]
+   [button
+    [:span toolbar-style [:i.icon.ion-ios-download-outline icon-style] "AOT compile"]
     17
     button-style
-    opened
-    #()]])
+    folder-path
+    #(put! out [:aot-compile nil])]])

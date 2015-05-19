@@ -100,16 +100,26 @@
         [from to] (to-from-fn opened)
         text (:text opened)]
     (->> text
-      (clr/winforms-sync-eval from to)
+      (clr/winforms-sync-eval (get-in state [:folder :path]) from to)
       (data/update-results state))))
 
 (defn evaluate-script [state]
-  (evaluate state
+  (evaluate
+    state
     (fn [opened]
       [0 (count (:text opened))])))
 
 (defn evaluate-form [state]
-  (evaluate state #(if-let [x (:cursor-selection %)] x [-1 -1])))
+  (evaluate
+    state
+    #(if-let [x (:cursor-selection %)] x [-1 -1])))
+
+(defn aot-compile [state-cur]
+  (go
+    (let [state @state-cur]
+      (println (<! (clr/async-eval 'core.cross-app-domain-compiler/aot-compile
+                     {:path (get-in state [:folder :path])
+                      :top-ns 'new}))))))
 
 (defn save [state-cur state channel]
   (go
@@ -259,6 +269,7 @@
           :reload-file (<! (reload-file state-cur channel))
           :evaluate-form (swap! state-cur evaluate-form)
           :evaluate-script (swap! state-cur evaluate-script)
+          :aot-compile (<! (aot-compile state-cur))
           :before-change (swap! state-cur data/shift-results arg)
           :change (swap! state-cur data/update-text arg)
           :cursor-selection (swap! state-cur data/update-cursor-selection arg)

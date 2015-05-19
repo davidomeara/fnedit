@@ -1,4 +1,6 @@
-(ns core.core)
+(ns core.core
+  (:require [core.cross-app-domain-compiler :as c])
+  (:import (CrossAppDomainCompiler)))
 
 (defn fuller-exception [^System.Exception ex]
   (str (.ToString ex)
@@ -91,8 +93,9 @@
 
 (def current-ns (atom (create-ns 'user)))
 
-(defn read-eval [from to forms]
+(defn read-eval [dir from to forms]
   (binding [*ns* @current-ns]
+    (c/add-clojure-load-paths dir)
     (let [result (pr-str
                   (using-line-numbering-reader
                    forms
@@ -105,4 +108,3 @@
                           results-to-map))))]
       (reset! current-ns *ns*)
       result)))
-
