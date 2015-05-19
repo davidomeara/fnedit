@@ -5,7 +5,7 @@
             [ui.widgets :as widgets]
             [ui.debug :as debug]))
 
-(defn dialog [contents]
+(defn dialog [contents & {:keys [style]}]
   [:div.fullscreen.transparent
    {:style {:z-index "11"
             :display "flex"
@@ -13,13 +13,15 @@
             :justify-content "flex-start"
             :align-items "center"}}
    [:div.font
-    {:style {:color "#222"
-             :border "1px solid #b6b6b7"
-             :background-color "#f5f2f1"
-             :z-index "12"
-             :margin-top "100px"
-             :padding "20px"
-             :width "400px"}}
+    {:style (merge {:color "#222"
+                    :border "1px solid #b6b6b7"
+                    :background-color "#f5f2f1"
+                    :z-index "12"
+                    :margin-top "100px"
+                    :padding "20px"
+                    :width "400px"
+                    :display "flex"
+                    :flex-direction "column"} style)}
     contents]])
 
 (defn name-file
@@ -54,6 +56,49 @@
                          :flex-direction "row-reverse"}}
            [widgets/negative-button "Cancel" 2 (delay true) #(put! out [:cancel @input-atom])]
            [widgets/positive-button "OK" 1 (delay true) #(put! out [:ok @input-atom])]]]]))))
+
+(defn aot-compile
+  "state {:result string :compiling? bool}, out [:compile string] [:cancel nil]"
+  [state out]
+  (fn []
+    (let [input-atom (reagent/atom "")]
+      (when @state
+        [dialog
+         [:form.unselectable
+          {:on-submit #(stop-event %)
+           :style {:height "100%"
+                   :display "flex"
+                   :flex-direction "column"}}
+          [:span {:style {:margin "2px"
+                          :display "flex"
+                          :flex-direction "row"}} "Namespace to compile:"]
+          [:div {:style {:display "flex"
+                         :flex-direction "row"}}
+           [widgets/input
+            0
+            {:flex-grow 1}
+            input-atom
+            #()
+            #(put! out [:compile @input-atom])]]
+          [:div {:style {:display "flex"
+                         :flex-direction "row-reverse"}}
+           [widgets/negative-button "Close" 2 (delay true) #(put! out [:cancel nil])]
+           [widgets/positive-button "Compile" 1 (delay true) #(put! out [:ok @input-atom])]]
+          [:textarea {:value "qwerty"
+                      :readOnly true
+                      :style {:display "flex"
+                              :flex-direction "row"
+                              :flex-grow "1"
+                              :background-color "white"
+                              :border "1px solid #b6b6b7"
+                              :margin "2px"
+                              :font-family "Consolas, monospace"
+                              ;:-webkit-user-select "text"
+                              :outline "none"
+                              :resize "none"}}]]
+         :style {:width "calc(100% - 200px)"
+                 :height "calc(100% - 100px)"
+                 :margin "100px"}]))))
 
 (defn choice
   "state {:caption string :exception string} choices {output-key button-type button-name-string}"

@@ -116,10 +116,13 @@
 
 (defn aot-compile [state-cur]
   (go
-    (let [state @state-cur]
-      (println (<! (clr/async-eval 'core.cross-app-domain-compiler/aot-compile
+    (as-> @state-cur state
+      (assoc state :aot-compile {})
+      (reset! state-cur state)
+      )
+      #_(println (<! (clr/async-eval 'core.cross-app-domain-compiler/aot-compile
                      {:path (get-in state [:folder :path])
-                      :top-ns 'new}))))))
+                      :top-ns 'new})))))
 
 (defn save [state-cur state channel]
   (go

@@ -49,6 +49,7 @@
         [modal-dialog/ok (reagent/cursor state [:save-file]) channel]
         [modal-dialog/yes-no-cancel (reagent/cursor state [:close-file]) channel]
         [modal-dialog/yes-no (reagent/cursor state [:reloaded-file]) channel]
+        [modal-dialog/aot-compile (reagent/cursor state [:aot-compile]) channel]
         [hsplitter
          120
          120
