@@ -71,7 +71,7 @@
     (for [read-result read-results]
       (if (overlap? from to read-result)
         (eval-result read-result)
-        (assoc read-result :item ""))))
+        (assoc read-result :item nil))))
 
 (defn limit-exceptions [n s]
   (->> s
@@ -103,7 +103,7 @@
                           lazy-read
                           (lazy-eval from to)
                           (limit-exceptions 10)
-                          (filter #(not= (:item %) ""))
+                          (filter #(not= (:item %) nil))
                           results-to-map))))]
       (reset! current-ns *ns*)
       result)))
