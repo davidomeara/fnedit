@@ -21,8 +21,8 @@
   (let [c (chan)
         state (reagent/atom {:left-width initial-left-width})
         mouse-down (fn [e] (stop-event e #(put! c [:down nil])))
-        mouse-move (fn [e] (stop-event e #(put! c [:move (client-x-width e)])))
-        mouse-up (fn [e] (stop-event e #(put! c [:up nil])))]
+        mouse-move (fn [e] (put! c [:move (client-x-width e)]) nil)
+        mouse-up (fn [e] (put! c [:up nil]) nil)]
 
     (go-loop
      [drag-state nil]

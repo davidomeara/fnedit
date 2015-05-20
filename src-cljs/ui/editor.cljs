@@ -7,11 +7,9 @@
             [ui.debug :as debug]))
 
 (defn line-widget [value]
-  (let [div (.createElement js/document "div")]
-    (reagent/render-component
-      (fn []
-        [:div [:pre value]])
-      div)
+  (let [div (.createElement js/document "div")
+        node (.createTextNode js/document value)]
+    (.appendChild div node)
     div))
 
 (defn clear-line-widgets [cm]
@@ -29,8 +27,7 @@
           line (.-line to-pos)
           line-handle (.getLineHandle doc line)
           div (line-widget value)]
-      (.addLineWidget cm line-handle div
-        (clj->js {:handleMouseEvents true})))))
+      (.addLineWidget cm line-handle div))))
 
 (defn widgets-height [cm cursor]
   (reduce

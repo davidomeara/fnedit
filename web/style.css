@@ -7,17 +7,14 @@
   height: 100%;
 }
 
-.CodeMirror-linewidget > div > div {
+.CodeMirror-linewidget > div {
   overflow-x: auto;
   overflow-y: hidden;
-  margin: 0.5em;
-  background-color: #f5f2f1;
-  border: 1px solid #b6b6b7;
-}
-
-.CodeMirror-linewidget > div > div > pre {
-  margin-left: -3px;
+  margin: calc(0.5em - 3px);
   padding: 0.5em;
+  background-color: #f7f7f7;
+  border: 1px solid #dddddd;
+  white-space: pre;
 }
 
 .CodeMirror pre.CodeMirror-placeholder {
