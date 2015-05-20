@@ -87,4 +87,5 @@
        (Cef/Initialize)
        (.ShowDialog (form folder? browser))
        (.Dispose browser)
-       (Cef/Shutdown)))))
+       (Cef/Shutdown)
+       (shutdown-agents)))))

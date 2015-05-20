@@ -1,5 +1,6 @@
 (ns core.clojure-clr-wrapper
   (:require [core.core :as c]
+            [core.aot-compiler]
             [core.fs])
   (:import
    (System.Threading.Tasks

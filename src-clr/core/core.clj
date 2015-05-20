@@ -1,6 +1,5 @@
 (ns core.core
-  (:require [core.cross-app-domain-compiler :as c])
-  (:import (CrossAppDomainCompiler)))
+  (:require [core.cross-app-domain-compiler :as c]))
 
 (defn fuller-exception [^System.Exception ex]
   (str (.ToString ex)
