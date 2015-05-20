@@ -86,7 +86,8 @@
           (-> doc (.indexFromPos (.-to c)))]]))))
 
 (defn make-editor [opened channel]
-  (let [before-change (make-on-before-change channel)
+  (let [cached-results (atom nil)
+        before-change (make-on-before-change channel)
         change #(put! channel [:change (-> %1 .-doc .getValue)])
         cursor-activity #(put! channel [:cursor-selection (cursor-selection %)])]
 
@@ -100,8 +101,11 @@
           [:div {:style {:display "none"}} (:results @opened)]])
        :component-will-update
        (fn [this]
-         (let [cm (get-cm this)]
-           (evaluate-script-results cm (:results @opened))
+         (let [cm (get-cm this)
+               results (:results @opened)]
+           (when (not= results @cached-results)
+             (evaluate-script-results cm results)
+             (reset! cached-results results))
            (go (.focus cm))))
        :component-did-mount
        (fn [this]
