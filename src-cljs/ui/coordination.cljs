@@ -11,10 +11,28 @@
     (get-in state [:folder :path])
     (assoc-in state [:open-folder :path])))
 
+(defn file-from [key state]
+  (->> (get-in state [key :files])
+    (filter #(= (:path %) (get-in state [:opened-file :path])))
+    first))
+
+(defn file-from-opened [state]
+  (file-from :folder state))
+
+(defn open-folder-to-folder [state]
+  (let [folder-file (file-from :folder state)
+        open-folder-file (file-from :open-folder state)]
+    (if (and folder-file (not open-folder-file))
+      (-> state
+        (update-in [:open-folder :files] conj folder-file)
+        (assoc-in [:opened-file :dirty?] true))
+      state)))
+
 (defn load-folder [state state-cur channel]
   (go
     (as-> state state
       (<! (clr/async-eval-in state 'core.fs/get-clj-files [:open-folder]))
+      (open-folder-to-folder state)
       (if (contains? (:open-folder state) :cancel)
         (dissoc state :open-folder)
         state)
@@ -221,11 +239,6 @@
                 (<! (do-open-file state-cur state channel path)))
               (reset! state-cur state))))))))
 
-(defn file-from-opened [state]
-  (->> (get-in state [:folder :files])
-    (filter #(= (:path %) (get-in state [:opened-file :path])))
-    first))
-
 (defn reload-file [state-cur channel]
   (go
     (as-> @state-cur state
@@ -248,7 +261,9 @@
                            (dissoc state :opened-file)
                            (reset! state-cur state)
                            (<! (do-open-file state-cur state channel path)))))
-                :no (dissoc state :reloaded-file)
+                :no (-> state
+                      (dissoc :reloaded-file)
+                      (assoc-in [:opened-file :dirty?] true))
                 (recur)))
             (reset! state-cur state))
           state))
