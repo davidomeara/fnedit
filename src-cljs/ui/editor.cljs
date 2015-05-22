@@ -53,7 +53,7 @@
       (doseq [[[_ to] v] (sort-by #(first (first %)) results)]
         (add-line-widget cm to v))
       (.refresh cm)))
-  (reset-scroll cm))
+  #_(reset-scroll cm))
 
 (defn get-cm [this]
   (-> this reagent/dom-node .-lastChild .-CodeMirror))
