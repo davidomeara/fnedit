@@ -19,6 +19,12 @@
 (defn file-from-opened [state]
   (file-from :folder state))
 
+(defn- clj-extension? [name]
+  (let [n (count name)]
+    (if (>= n 4)
+      (= (subs name (- n 4) n) ".clj")
+      false)))
+
 (defn open-folder-to-folder [state]
   (let [folder-file (file-from :folder state)
         open-folder-file (file-from :open-folder state)]
@@ -32,6 +38,7 @@
   (go
     (as-> state state
       (<! (clr/async-eval-in state 'core.fs/get-clj-files [:open-folder]))
+      (update-in state [:open-folder :files] (fn [s] (filter #(clj-extension? (:name %)) s)))
       (open-folder-to-folder state)
       (if (contains? (:open-folder state) :cancel)
         (dissoc state :open-folder)
@@ -45,12 +52,6 @@
               :ok (dissoc state :open-folder)
               (recur))))
         (set/rename-keys state {:open-folder :folder})))))
-
-(defn- clj-extension? [name]
-  (let [n (count name)]
-    (if (>= n 4)
-      (= (subs name (- n 4) n) ".clj")
-      false)))
 
 (defn- assoc-clj-validation-warning [s]
   (assoc-in s [:new-file :validation]

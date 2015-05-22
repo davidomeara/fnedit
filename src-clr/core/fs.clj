@@ -32,7 +32,6 @@
   (try
     {:path path
      :name (Path/GetFileName path)
-     :extension (Path/GetExtension path)
      :last-write-time (File/GetLastWriteTimeUtc path)}
     (catch Exception e nil)))
 
@@ -49,8 +48,7 @@
         (assoc folder :files (->> path
                                   get-files
                                   (map file-info)
-                                  (remove nil?)
-                                  (filter #(= (:extension %) ".clj"))))
+                                  (remove nil?)))
         (catch Exception e (assoc folder :exception (.get_Message e))))
       folder)))
 
