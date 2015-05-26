@@ -31,14 +31,14 @@
 (defn- file-info [path]
   (try
     {:path path
-     :name (Path/GetFileName path)
-     :last-write-time (File/GetLastWriteTimeUtc path)}
+     :name (Path/GetFileName path)}
     (catch Exception e nil)))
 
-(defn reload [reload-file _]
-  (let [reloaded-file (file-info (:path reload-file))]
-    (if reloaded-file
-      reloaded-file
+(defn update-last-write-time [reload-file _]
+  (try
+    (assoc reload-file :last-write-time
+      (File/GetLastWriteTimeUtc (:path reload-file)))
+    (catch Exception e
       reload-file)))
 
 (defn get-clj-files [folder _]
@@ -56,7 +56,9 @@
   (let [path (:path open-file)]
     (if path
       (try
-        (assoc open-file :text (File/ReadAllText path))
+        (-> open-file
+            (assoc :text (File/ReadAllText path))
+            (assoc :last-write-time (File/GetLastWriteTimeUtc path)))
         (catch Exception e (assoc open-file :exception (.get_Message e))))
       open-file)))
 
@@ -97,7 +99,8 @@
     (if (and path text)
       (try
         (File/WriteAllText path text)
-        m
+        (assoc m :last-write-time
+          (File/GetLastWriteTimeUtc path))
         (catch Exception e
           (assoc m :exception (.get_Message e))))
       m)))
