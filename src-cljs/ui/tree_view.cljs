@@ -23,7 +23,8 @@
 
 (defn file-div [depth {:keys [path name]} opened channel]
   [:div.font.unselectable
-   {:style (div-style path opened)}
+   {:on-click #(stop-event % (fn [] (put! channel [:open-file path])))
+    :style (div-style path opened)}
    [padded-div depth name]])
 
 (defn dir-div

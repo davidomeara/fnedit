@@ -6,7 +6,6 @@
             [ui.js-util :refer [stop-event]]
             [ui.editor :refer [editor]]
             [ui.hsplitter :refer [hsplitter]]
-            [ui.files :refer [files]]
             [ui.tree-view :refer [tree-view]]
             [ui.toolbar :refer [toolbar]]
             [ui.modal-dialog :as modal-dialog]
@@ -54,15 +53,10 @@
         [hsplitter
          120
          120
-         [:div
-          [files
-           (reagent/cursor state [:folder :files])
-           (reagent/cursor state [:opened-file])
-           channel]
-          [tree-view
-           (reagent/cursor state [:root])
-           (reagent/cursor state [:opened-file])
-           channel]]
+         [tree-view
+          (reagent/cursor state [:root])
+          (reagent/cursor state [:opened-file])
+          channel]
          [editor
           (reagent/cursor state [:folder :files])
           (reagent/cursor state [:opened-file])
