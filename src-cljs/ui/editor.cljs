@@ -106,7 +106,7 @@
            (when (not= results @cached-results)
              (evaluate-script-results cm results)
              (reset! cached-results results))
-           (go (.focus cm))))
+           #_(go (.focus cm))))
        :component-did-mount
        (fn [this]
          (let [cm (js/CodeMirror.
