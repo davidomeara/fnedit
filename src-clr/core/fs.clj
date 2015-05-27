@@ -4,6 +4,7 @@
   (:import
    (System.IO
     Directory
+    DirectoryInfo
     File
     FileStream
     FileMode
@@ -109,3 +110,27 @@
   (try
     (File/Exists path)
     (catch Exception e false)))
+
+(defn- node [path open]
+  {:directories (->> (Directory/GetDirectories path)
+                     (map (fn [p] [{:path p
+                                    :name (-> p DirectoryInfo. .get_Name)}
+                                   (when (contains? open p)
+                                       (node p open))]))
+                     (into (hash-map)))
+   :files       (->> (Directory/GetFiles path)
+                     (map (fn [p] {:path p
+                                   :name (Path/GetFileName p)}))
+                     (into (hash-set)))})
+
+(defn remove-deleted-directory [open]
+  (->> open
+       (map #(when (Directory/Exists %) %))
+       (remove nil?)
+       (into (hash-set))))
+
+(defn root-directory [path open _]
+  (when path
+    {{:path path
+      :name (-> path DirectoryInfo. .get_Name)}
+     (node path open)}))

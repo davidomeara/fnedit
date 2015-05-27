@@ -37,6 +37,8 @@
 (defn load-folder [state state-cur channel]
   (go
     (as-> state state
+      (assoc state :root (<! (clr/async-eval 'core.fs/root-directory (get-in state [:open-folder :path]) #{})))
+      ;(debug/pt state)
       (<! (clr/async-eval-in state 'core.fs/get-clj-files [:open-folder]))
       (update-in state [:open-folder :files] (fn [s] (filter #(clj-extension? (:path %)) s)))
       (open-folder-to-folder state)
