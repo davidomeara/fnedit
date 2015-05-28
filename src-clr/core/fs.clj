@@ -34,15 +34,11 @@
     (catch Exception e
       nil)))
 
-(defn read-all-text [open-file _]
-  (let [path (:path open-file)]
-    (if path
-      (try
-        (-> open-file
-            (assoc :text (File/ReadAllText path))
-            (assoc :last-write-time (File/GetLastWriteTimeUtc path)))
-        (catch Exception e (assoc open-file :exception (.get_Message e))))
-      open-file)))
+(defn read-all-text [path _]
+  (try
+    {:text (File/ReadAllText path)
+     :last-write-time (File/GetLastWriteTimeUtc path)}
+    (catch Exception e {:exception (.get_Message e)})))
 
 (defn combine-folder-path [m _]
   (let [folder-path (:folder-path m)

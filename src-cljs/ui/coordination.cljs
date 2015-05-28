@@ -177,26 +177,20 @@
               (<! (load-folder state-cur (get-in state [:open-root-directory :path]) channel))
               (reset! state-cur state))))))))
 
-(defn do-open-file [state-cur state channel path]
+(defn do-open-file [state-cur channel path]
   (go
-    (as-> state state
-      (assoc-in state [:open-file :path] path)
-      (<! (clr/async-eval-in state 'core.fs/read-all-text [:open-file]))
-      (if (contains? (:open-file state) :exception)
-        (as-> state state
-          (assoc-in state [:open-file :caption] "Cannot open file")
-          (reset! state-cur state)
+    (let [{:keys [text last-write-time exception]} (<! (clr/async-eval 'core.fs/read-all-text path))]
+      (if exception
+        (do
+          (swap! state-cur assoc-in [:open-file :caption] "Cannot open file")
           (loop []
             (case (<! channel)
-              :ok (dissoc state :open-file)
-              (recur))))
-        (if (and
-              (get-in state [:open-file :path])
-              (get-in state [:open-file :text]))
-          (set/rename-keys state {:open-file :opened-file})
-          (dissoc state :open-file)))
-      (reset! state-cur state)
-      (<! (load-folder state-cur (root-path state) channel)))))
+              :ok nil
+              (recur)))
+          (swap! state-cur dissoc :open-file))
+        (when (and path text)
+          (swap! state-cur assoc :opened-file {:path path :last-write-time last-write-time :text text}))))
+    (<! (load-folder state-cur (root-path @state-cur) channel))))
 
 (defn open-file [state-cur channel path]
   (go
@@ -205,9 +199,10 @@
         (fn [state]
           (go
             (as-> state state
+              (reset! state-cur state)
               (if (= (get-in state [:opened-file :path]) path)
                 (dissoc state :opened-file)
-                (<! (do-open-file state-cur state channel path)))
+                (<! (do-open-file state-cur channel path)))
               (reset! state-cur state))))))))
 
 (defn reload-file [state-cur channel]
@@ -222,7 +217,7 @@
               (case (<! channel)
                 :yes (let [path (get-in @state-cur [:opened-file :path])]
                        (swap! state-cur dissoc :opened-file)
-                       (<! (do-open-file state-cur @state-cur channel path)))
+                       (<! (do-open-file state-cur channel path)))
                 :no (swap! state-cur assoc-in [:opened-file :dirty?] true)
                 (recur)))
             (swap! state-cur dissoc :reloaded-file)
