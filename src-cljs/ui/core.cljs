@@ -44,7 +44,7 @@
         [modal-dialog/name-file (reagent/cursor state [:new-file]) channel]
         [modal-dialog/yes-no (reagent/cursor state [:delete-file]) channel]
         [modal-dialog/ok (reagent/cursor state [:ok-dialog]) channel]
-        ;[modal-dialog/ok (reagent/cursor state [:open-folder]) channel]
+        [modal-dialog/ok (reagent/cursor state [:open-root-directory]) channel]
         [modal-dialog/ok (reagent/cursor state [:open-file]) channel]
         [modal-dialog/ok (reagent/cursor state [:save-file]) channel]
         [modal-dialog/yes-no-cancel (reagent/cursor state [:close-file]) channel]

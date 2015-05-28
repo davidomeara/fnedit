@@ -18,13 +18,13 @@
     FolderBrowserDialog
     DialogResult)))
 
-(defn folder-browser-dialog [folder wrapper]
+(defn folder-browser-dialog [wrapper]
   (try
     (let [dialog (FolderBrowserDialog.)]
       (if (= (.ShowDialog dialog (.FindForm (:browser wrapper))) DialogResult/OK)
-        (assoc folder :path (.SelectedPath dialog))
-        (assoc folder :cancel true)))
-    (catch Exception e (assoc folder :exception (.get_Message e)))))
+        {:path (.SelectedPath dialog)}
+        {:cancel true}))
+    (catch Exception e {:exception (.get_Message e)})))
 
 (defn last-write-time [path _]
   (try

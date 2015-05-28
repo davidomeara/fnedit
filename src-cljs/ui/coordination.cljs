@@ -155,27 +155,34 @@
                      (<! (save state-cur channel))
                      (dissoc state :close-file)
                      (reset! state-cur state)
-                     (<! (on-close-fn state)))
+                     (<! (on-close-fn)))
               :no (as-> state state
                     (dissoc state :close-file)
                     (reset! state-cur state)
-                    (<! (on-close-fn state)))
+                    (<! (on-close-fn)))
               :cancel (as-> state state
                         (dissoc state :close-file)
                         (reset! state-cur state))
               (recur))))
-        (<! (on-close-fn state))))))
+        (<! (on-close-fn))))))
 
 (defn open-folder-browser-dialog [state-cur channel]
   (go
     (<!
       (close-file state-cur channel
-        (fn [state]
+        (fn []
           (go
-            (as-> state state
-              (<! (clr/winforms-async-eval-in state 'core.fs/folder-browser-dialog [:open-root-directory]))
-              (<! (load-folder state-cur (get-in state [:open-root-directory :path]) channel))
-              (reset! state-cur state))))))))
+            (let [{:keys [path cancel exception]} (<! (clr/winforms-async-eval 'core.fs/folder-browser-dialog))]
+              (if exception
+                (do
+                  (swap! state-cur assoc-in [:open-root-directory :caption] "Cannot open directory")
+                  (loop []
+                    (case (<! channel)
+                      :ok nil
+                      (recur)))
+                  (swap! state-cur dissoc :open-root-directory))
+                (if path
+                  (<! (load-folder state-cur path channel)))))))))))
 
 (defn do-open-file [state-cur channel path]
   (go
@@ -196,14 +203,11 @@
   (go
     (<!
       (close-file state-cur channel
-        (fn [state]
+        (fn []
           (go
-            (as-> state state
-              (reset! state-cur state)
-              (if (= (get-in state [:opened-file :path]) path)
-                (dissoc state :opened-file)
-                (<! (do-open-file state-cur channel path)))
-              (reset! state-cur state))))))))
+            (if (= (get-in @state-cur [:opened-file :path]) path)
+              (swap! state-cur dissoc :opened-file)
+              (<! (do-open-file state-cur channel path)))))))))
 
 (defn reload-file [state-cur channel]
   (go
