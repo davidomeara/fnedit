@@ -11,37 +11,18 @@
     (get-in state [:folder :path])
     (assoc-in state [:open-folder :path])))
 
-(defn file-from [key state]
-  (->> (get-in state [key :files])
-    (filter #(= (:path %) (get-in state [:opened-file :path])))
-    first))
-
-(defn file-from-opened [state]
-  (file-from :folder state))
-
 (defn- clj-extension? [name]
   (let [n (count name)]
     (if (>= n 4)
       (= (subs name (- n 4) n) ".clj")
       false)))
 
-(defn open-folder-to-folder [state]
-  (let [folder-file (file-from :folder state)
-        open-folder-file (file-from :open-folder state)]
-    (if (and folder-file (not open-folder-file))
-      (-> state
-        (update-in [:open-folder :files] conj folder-file)
-        (assoc-in [:opened-file :dirty?] true))
-      state)))
-
 (defn load-folder [state state-cur channel]
   (go
     (as-> state state
       (assoc state :root (<! (clr/async-eval 'core.fs/root-directory (get-in state [:open-folder :path]) #{})))
-      ;(debug/pt state)
       (<! (clr/async-eval-in state 'core.fs/get-clj-files [:open-folder]))
       (update-in state [:open-folder :files] (fn [s] (filter #(clj-extension? (:path %)) s)))
-      (open-folder-to-folder state)
       (if (contains? (:open-folder state) :cancel)
         (dissoc state :open-folder)
         state)
@@ -250,29 +231,30 @@
       (<! (clr/async-eval-in state 'core.fs/update-last-write-time [:reloaded-file]))
       (let [reload-time (get-in state [:reloaded-file :last-write-time])
             opened-time (get-in state [:opened-file :last-write-time])]
-        (as-> state state
-          (if (and reload-time opened-time
-                (> (.getTime reload-time) (.getTime opened-time)))
-            (as-> state state
-              (assoc-in state [:reloaded-file :caption] "The file has been changed outside this editor.  Would you like to reload it?")
-              (reset! state-cur state)
-              (loop []
-                (case (<! channel)
-                  :yes (as-> state state
-                         (dissoc state :reloaded-file)
-                         (reset! state-cur state)
-                         (let [path (get-in state [:opened-file :path])]
-                           (as-> state state
-                             (dissoc state :opened-file)
-                             (reset! state-cur state)
-                             (<! (do-open-file state-cur state channel path)))))
-                  :no (-> state
-                        (dissoc :reloaded-file)
-                        (assoc-in [:opened-file :dirty?] true))
-                  (recur)))
-              (reset! state-cur state))
-            state)
-          (assoc-in state [:opened-file :last-write-time] reload-time)))
+        (cond
+          (and (nil? reload-time) opened-time) (assoc-in state [:opened-file :dirty?] true)
+          (and reload-time opened-time
+            (> (.getTime reload-time) (.getTime opened-time)))
+          (as-> state state
+            (assoc-in state [:reloaded-file :caption] "The file has been changed outside this editor.  Would you like to reload it?")
+            (reset! state-cur state)
+            (loop []
+              (case (<! channel)
+                :yes (as-> state state
+                       (dissoc state :reloaded-file)
+                       (reset! state-cur state)
+                       (let [path (get-in state [:opened-file :path])]
+                         (as-> state state
+                           (dissoc state :opened-file)
+                           (reset! state-cur state)
+                           (<! (do-open-file state-cur state channel path)))))
+                :no (-> state
+                      (dissoc :reloaded-file)
+                      (assoc-in [:opened-file :dirty?] true))
+                (recur)))
+            (assoc-in state [:opened-file :last-write-time] reload-time)
+            (reset! state-cur state))
+          :else state))
       (folder-path-to-opened-folder state)
       (<! (load-folder state state-cur channel))
       (dissoc state :reloaded-file)

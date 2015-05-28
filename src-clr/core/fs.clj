@@ -37,10 +37,12 @@
 
 (defn update-last-write-time [reload-file _]
   (try
-    (assoc reload-file :last-write-time
-      (File/GetLastWriteTimeUtc (:path reload-file)))
+    (if (File/Exists (:path reload-file))
+      (assoc reload-file :last-write-time
+        (File/GetLastWriteTimeUtc (:path reload-file)))
+      nil)
     (catch Exception e
-      reload-file)))
+      (assoc reload-file :last-write-time nil))))
 
 (defn get-clj-files [folder _]
   (let [path (:path folder)]

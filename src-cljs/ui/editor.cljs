@@ -136,14 +136,10 @@
            (.off cm "change" change)
            (.off cm "cursorActivity" cursor-activity)))})))
 
-(defn show-editor [file opened channel]
-  (fn []
-    (when (= (:path file) (:path @opened))
-      [make-editor opened channel])))
-
 (defn editor [files opened channel]
   [:div {:style {:flex-grow 1
                  :position "relative"}}
-   (let [file-coll @files]
-     (for [file file-coll]
-       ^{:key (:path file)} [show-editor file opened channel]))])
+   (when (:path @opened)
+     (let [path-coll [(:path @opened)]]
+       (for [path path-coll]
+         ^{:key path} [make-editor opened channel])))])
