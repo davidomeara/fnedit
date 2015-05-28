@@ -13,22 +13,19 @@
     ((fn [[k v]] k))
     :path))
 
-(defn folder-path-to-opened-folder [state]
-  (assoc-in state [:open-root-directory :path] (root-path state)))
-
 (defn- clj-extension? [name]
   (let [n (count name)]
     (if (>= n 4)
       (= (subs name (- n 4) n) ".clj")
       false)))
 
-(defn load-folder [state state-cur channel]
+(defn load-folder [state-cur root-path channel]
   (go
-    (as-> state state
-      (assoc state :root (<! (clr/async-eval 'core.fs/root-directory
-                               (get-in state [:open-root-directory :path]) #{})))
-      (dissoc state :open-root-directory)
-      (reset! state-cur state))))
+    (swap!
+      state-cur
+      assoc
+      :root
+      (<! (clr/async-eval 'core.fs/root-directory root-path #{})))))
 
 (defn- assoc-clj-validation-warning [s]
   (assoc-in s [:new-file :validation]
@@ -58,8 +55,7 @@
                     (<! (clr/async-eval-in state 'core.fs/create [:new-file]))
                     (if (contains? (:new-file state) :path)
                       (as-> state state
-                        (folder-path-to-opened-folder state)
-                        (<! (load-folder state state-cur channel))
+                        (<! (load-folder state-cur (root-path state) channel))
                         ; set :new-file to be :opened-file
                         (dissoc state :new-file))
                       (recur state)))
@@ -87,8 +83,7 @@
                      (dissoc :opened-file))))
           :no (dissoc state :delete-file)
           (recur state)))
-      (folder-path-to-opened-folder state)
-      (<! (load-folder state state-cur channel))
+      (<! (load-folder state-cur (root-path state) channel))
       (reset! state-cur state))))
 
 (defn evaluate [state to-from-fn]
@@ -142,8 +137,7 @@
         (-> state
           (set/rename-keys {:save-file :opened-file})
           (assoc-in [:opened-file :dirty?] false)))
-      (folder-path-to-opened-folder state)
-      (<! (load-folder state state-cur channel))
+      (<! (load-folder state-cur (root-path state) channel))
       (reset! state-cur state))))
 
 (defn close-file [state-cur channel on-close-fn]
@@ -181,7 +175,7 @@
           (go
             (as-> state state
               (<! (clr/winforms-async-eval-in state 'core.fs/folder-browser-dialog [:open-root-directory]))
-              (<! (load-folder state state-cur channel))
+              (<! (load-folder state-cur (get-in state [:open-root-directory :path]) channel))
               (reset! state-cur state))))))))
 
 (defn do-open-file [state-cur state channel path]
@@ -202,8 +196,8 @@
               (get-in state [:open-file :text]))
           (set/rename-keys state {:open-file :opened-file})
           (dissoc state :open-file)))
-      (folder-path-to-opened-folder state)
-      (<! (load-folder state state-cur channel)))))
+      (reset! state-cur state)
+      (<! (load-folder state-cur (root-path state) channel)))))
 
 (defn open-file [state-cur channel path]
   (go
@@ -219,40 +213,23 @@
 
 (defn reload-file [state-cur channel]
   (go
-    (as-> @state-cur state
-      (assoc-in state [:reloaded-file :last-write-time] (get-in state [:opened-file :last-write-time]))
-      (assoc-in state [:reloaded-file :path] (get-in state [:opened-file :path]))
-      (<! (clr/async-eval-in state 'core.fs/update-last-write-time [:reloaded-file]))
-      (let [reload-time (get-in state [:reloaded-file :last-write-time])
-            opened-time (get-in state [:opened-file :last-write-time])]
-        (cond
-          (and (nil? reload-time) opened-time) (assoc-in state [:opened-file :dirty?] true)
-          (and reload-time opened-time
-            (> (.getTime reload-time) (.getTime opened-time)))
-          (as-> state state
-            (assoc-in state [:reloaded-file :caption] "The file has been changed outside this editor.  Would you like to reload it?")
-            (reset! state-cur state)
+    (let [reload-time (<! (clr/async-eval 'core.fs/last-write-time (get-in @state-cur [:opened-file :path])))
+          opened-time (get-in @state-cur [:opened-file :last-write-time])]
+      (when opened-time
+        (if reload-time
+          (when (> (.getTime reload-time) (.getTime opened-time))
+            (swap! state-cur assoc-in [:reloaded-file :caption] "The file has been changed outside this editor.  Would you like to reload it?")
             (loop []
               (case (<! channel)
-                :yes (as-> state state
-                       (dissoc state :reloaded-file)
-                       (reset! state-cur state)
-                       (let [path (get-in state [:opened-file :path])]
-                         (as-> state state
-                           (dissoc state :opened-file)
-                           (reset! state-cur state)
-                           (<! (do-open-file state-cur state channel path)))))
-                :no (-> state
-                      (dissoc :reloaded-file)
-                      (assoc-in [:opened-file :dirty?] true))
+                :yes (let [path (get-in @state-cur [:opened-file :path])]
+                       (swap! state-cur dissoc :opened-file)
+                       (<! (do-open-file state-cur @state-cur channel path)))
+                :no (swap! state-cur assoc-in [:opened-file :dirty?] true)
                 (recur)))
-            (assoc-in state [:opened-file :last-write-time] reload-time)
-            (reset! state-cur state))
-          :else state))
-      (folder-path-to-opened-folder state)
-      (<! (load-folder state state-cur channel))
-      (dissoc state :reloaded-file)
-      (reset! state-cur state))))
+            (swap! state-cur dissoc :reloaded-file)
+            (swap! state-cur assoc-in [:opened-file :last-write-time] reload-time))
+          (swap! state-cur assoc-in [:opened-file :dirty?] true))))
+    (<! (load-folder state-cur (root-path @state-cur) channel))))
 
 (defn toggle [s v]
   (if (contains? s v)

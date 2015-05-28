@@ -26,14 +26,13 @@
         (assoc folder :cancel true)))
     (catch Exception e (assoc folder :exception (.get_Message e)))))
 
-(defn update-last-write-time [reload-file _]
+(defn last-write-time [path _]
   (try
-    (if (File/Exists (:path reload-file))
-      (assoc reload-file :last-write-time
-                         (File/GetLastWriteTimeUtc (:path reload-file)))
+    (if (File/Exists path)
+      (File/GetLastWriteTimeUtc path)
       nil)
     (catch Exception e
-      (assoc reload-file :last-write-time nil))))
+      nil)))
 
 (defn read-all-text [open-file _]
   (let [path (:path open-file)]
