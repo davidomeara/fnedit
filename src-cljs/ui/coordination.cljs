@@ -14,7 +14,7 @@
     :path))
 
 (defn folder-path-to-opened-folder [state]
-  (assoc-in state [:open-folder :path] (root-path state)))
+  (assoc-in state [:open-root-directory :path] (root-path state)))
 
 (defn- clj-extension? [name]
   (let [n (count name)]
@@ -24,12 +24,11 @@
 
 (defn load-folder [state state-cur channel]
   (go
-    (reset! state-cur
-      (assoc
-        state
-        :root
-        (<! (clr/async-eval 'core.fs/root-directory
-              (get-in state [:open-folder :path]) #{}))))))
+    (as-> state state
+      (assoc state :root (<! (clr/async-eval 'core.fs/root-directory
+                               (get-in state [:open-root-directory :path]) #{})))
+      (dissoc state :open-root-directory)
+      (reset! state-cur state))))
 
 (defn- assoc-clj-validation-warning [s]
   (assoc-in s [:new-file :validation]
@@ -181,7 +180,7 @@
         (fn [state]
           (go
             (as-> state state
-              (<! (clr/winforms-async-eval-in state 'core.fs/folder-browser-dialog [:open-folder]))
+              (<! (clr/winforms-async-eval-in state 'core.fs/folder-browser-dialog [:open-root-directory]))
               (<! (load-folder state state-cur channel))
               (reset! state-cur state))))))))
 
@@ -255,6 +254,14 @@
       (dissoc state :reloaded-file)
       (reset! state-cur state))))
 
+(defn toggle [s v]
+  (if (contains? s v)
+    (disj s v)
+    (clojure.set/union s #{v})))
+
+(defn toggle-open-directory [state-cur path]
+  (swap! state-cur update-in [:open-directories] toggle path))
+
 (defn periodically-send [v]
   (let [c (chan)]
     (go
@@ -268,7 +275,8 @@
     (while true
       (let [[[cmd arg] _] (alts! [channel (periodically-send [:reload-file nil])])]
         (case cmd
-          :open-folder (<! (open-folder-browser-dialog state-cur channel))
+          :open-root-directory (<! (open-folder-browser-dialog state-cur channel))
+          :toggle-open-directory (toggle-open-directory state-cur arg)
           :open-file (<! (open-file state-cur channel arg))
           :new (<! (new-file-dialog state-cur channel))
           :delete (<! (delete-file-dialog state-cur channel))

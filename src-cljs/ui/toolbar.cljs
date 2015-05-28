@@ -37,7 +37,7 @@
     10
     button-style
     (delay true)
-    #(put! out [:open-folder])]
+    #(put! out [:open-root-directory])]
 
    [button
     [:span toolbar-style [:i.icon.ion-ios-compose-outline icon-style] "New"]

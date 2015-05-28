@@ -30,7 +30,8 @@
 (defn dir-div
   [depth [{:keys [path name]} {:keys [directories files]}] opened channel]
   [:div.font.unselectable
-   {:style (div-style path opened)}
+   {:on-click #(stop-event % (fn [] (put! channel [:toggle-open-directory path])))
+    :style (div-style path opened)}
 
    [padded-div depth
     [:span

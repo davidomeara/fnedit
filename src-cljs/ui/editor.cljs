@@ -119,7 +119,7 @@
                               :foldGutter true
                               :matchBrackets true
                               :placeholder placeholder-text
-                              :extraKeys {:Ctrl-O #(put! channel [:open-folder nil])
+                              :extraKeys {:Ctrl-O #(put! channel [:open-root-directory nil])
                                           :Ctrl-N #(put! channel [:new nil])
                                           :Ctrl-S #(put! channel [:save nil])
                                           :Ctrl-Enter #(put! channel [:evaluate-form nil])
