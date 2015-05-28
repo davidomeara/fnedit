@@ -136,7 +136,7 @@
            (.off cm "change" change)
            (.off cm "cursorActivity" cursor-activity)))})))
 
-(defn editor [files opened channel]
+(defn editor [opened channel]
   [:div {:style {:flex-grow 1
                  :position "relative"}}
    (when (:path @opened)

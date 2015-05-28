@@ -22,7 +22,7 @@
 (def icon-style {:style {:margin-right "5px"
                          :font-size "18px"}})
 
-(defn toolbar [folder-path opened out]
+(defn toolbar [root opened out]
   [:div
    {:on-context-menu #(stop-event %)
     :style {:flex-grow 0
@@ -43,7 +43,7 @@
     [:span toolbar-style [:i.icon.ion-ios-compose-outline icon-style] "New"]
     11
     button-style
-    folder-path
+    root
     #(put! out [:new])]
 
    [button
@@ -80,5 +80,5 @@
     [:span toolbar-style [:i.icon.ion-ios-download-outline icon-style] "AOT compile"]
     17
     button-style
-    folder-path
+    root
     #(put! out [:aot-compile nil])]])

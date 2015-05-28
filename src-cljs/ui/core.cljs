@@ -38,13 +38,13 @@
                  :flex-direction "column"
                  :flex-grow 1}}
         [toolbar
-         (reagent/cursor state [:folder :path])
+         (reagent/cursor state [:root])
          (reagent/cursor state [:opened-file])
          channel]
         [modal-dialog/name-file (reagent/cursor state [:new-file]) channel]
         [modal-dialog/yes-no (reagent/cursor state [:delete-file]) channel]
         [modal-dialog/ok (reagent/cursor state [:ok-dialog]) channel]
-        [modal-dialog/ok (reagent/cursor state [:open-folder]) channel]
+        ;[modal-dialog/ok (reagent/cursor state [:open-folder]) channel]
         [modal-dialog/ok (reagent/cursor state [:open-file]) channel]
         [modal-dialog/ok (reagent/cursor state [:save-file]) channel]
         [modal-dialog/yes-no-cancel (reagent/cursor state [:close-file]) channel]
@@ -58,7 +58,6 @@
           (reagent/cursor state [:opened-file])
           channel]
          [editor
-          (reagent/cursor state [:folder :files])
           (reagent/cursor state [:opened-file])
           channel]]]
        (when debug

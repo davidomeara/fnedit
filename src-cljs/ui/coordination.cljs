@@ -6,10 +6,15 @@
             [ui.debug :as debug]
             [clojure.set :as set]))
 
+(defn root-path [state]
+  (->> state
+    :root
+    first
+    ((fn [[k v]] k))
+    :path))
+
 (defn folder-path-to-opened-folder [state]
-  (->>
-    (get-in state [:folder :path])
-    (assoc-in state [:open-folder :path])))
+  (assoc-in state [:open-folder :path] (root-path state)))
 
 (defn- clj-extension? [name]
   (let [n (count name)]
@@ -19,22 +24,12 @@
 
 (defn load-folder [state state-cur channel]
   (go
-    (as-> state state
-      (assoc state :root (<! (clr/async-eval 'core.fs/root-directory (get-in state [:open-folder :path]) #{})))
-      (<! (clr/async-eval-in state 'core.fs/get-clj-files [:open-folder]))
-      (update-in state [:open-folder :files] (fn [s] (filter #(clj-extension? (:path %)) s)))
-      (if (contains? (:open-folder state) :cancel)
-        (dissoc state :open-folder)
-        state)
-      (if (contains? (:open-folder state) :exception)
-        (as-> state state
-          (assoc-in state [:open-folder :caption] "Cannot open folder")
-          (reset! state-cur state)
-          (loop []
-            (case (<! channel)
-              :ok (dissoc state :open-folder)
-              (recur))))
-        (set/rename-keys state {:open-folder :folder})))))
+    (reset! state-cur
+      (assoc
+        state
+        :root
+        (<! (clr/async-eval 'core.fs/root-directory
+              (get-in state [:open-folder :path]) #{}))))))
 
 (defn- assoc-clj-validation-warning [s]
   (assoc-in s [:new-file :validation]
@@ -59,7 +54,7 @@
             :ok (if (clj-extension? file-name)
                   (as-> state state
                     (assoc-in state [:new-file :file-name] file-name)
-                    (assoc-in state [:new-file :folder-path] (get-in state [:folder :path]))
+                    (assoc-in state [:new-file :folder-path] (root-path state))
                     (<! (clr/async-eval-in state 'core.fs/combine-folder-path [:new-file]))
                     (<! (clr/async-eval-in state 'core.fs/create [:new-file]))
                     (if (contains? (:new-file state) :path)
@@ -102,7 +97,7 @@
         [from to] (to-from-fn opened)
         text (:text opened)]
     (->> text
-      (clr/winforms-sync-eval (get-in state [:folder :path]) from to)
+      (clr/winforms-sync-eval (root-path state) from to)
       (data/update-results state))))
 
 (defn evaluate-script [state]

@@ -26,34 +26,14 @@
         (assoc folder :cancel true)))
     (catch Exception e (assoc folder :exception (.get_Message e)))))
 
-(defn- get-files [path]
-  (Directory/GetFiles path))
-
-(defn- file-info [path]
-  (try
-    {:path path
-     :name (Path/GetFileName path)}
-    (catch Exception e nil)))
-
 (defn update-last-write-time [reload-file _]
   (try
     (if (File/Exists (:path reload-file))
       (assoc reload-file :last-write-time
-        (File/GetLastWriteTimeUtc (:path reload-file)))
+                         (File/GetLastWriteTimeUtc (:path reload-file)))
       nil)
     (catch Exception e
       (assoc reload-file :last-write-time nil))))
-
-(defn get-clj-files [folder _]
-  (let [path (:path folder)]
-    (if path
-      (try
-        (assoc folder :files (->> path
-                                  get-files
-                                  (map file-info)
-                                  (remove nil?)))
-        (catch Exception e (assoc folder :exception (.get_Message e))))
-      folder)))
 
 (defn read-all-text [open-file _]
   (let [path (:path open-file)]
