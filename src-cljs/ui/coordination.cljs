@@ -138,51 +138,38 @@
         nil))
     (<! (load-folder state-cur (root-path @state-cur) channel))))
 
-(defn close-file [state-cur channel on-close-fn]
+(defn close-file? [state-cur channel]
   (go
-    (as-> @state-cur state
-      (if (or
-            (get-in state [:opened-file :dirty?])
-            (let [path (get-in state [:opened-file :path])]
-              (when path (not (<! (clr/async-eval 'core.fs/exists path))))))
-        (as-> state state
-          (assoc-in state [:close-file :caption] "Would you like to save this file before closing it?")
-          (reset! state-cur state)
-          (loop []
-            (case (<! channel)
-              :yes (as-> state state
-                     (reset! state-cur state)
-                     (<! (save state-cur channel))
-                     (dissoc state :close-file)
-                     (reset! state-cur state)
-                     (<! (on-close-fn)))
-              :no (as-> state state
-                    (dissoc state :close-file)
-                    (reset! state-cur state)
-                    (<! (on-close-fn)))
-              :cancel (as-> state state
-                        (dissoc state :close-file)
-                        (reset! state-cur state))
-              (recur))))
-        (<! (on-close-fn))))))
+    (if (or
+          (get-in @state-cur [:opened-file :dirty?])
+          (let [path (get-in @state-cur [:opened-file :path])]
+            (when path (not (<! (clr/async-eval 'core.fs/exists path))))))
+      (do
+        (swap! state-cur assoc-in [:close-file :caption] "Would you like to save this file before closing it?")
+        (let [result (loop []
+                       (case (<! channel)
+                         :yes (do (<! (save state-cur channel)) true)
+                         :no true
+                         :cancel false
+                         (recur))
+                       (swap! state-cur dissoc :close-file))]
+          result))
+      true)))
 
 (defn open-folder-browser-dialog [state-cur channel]
   (go
-    (<!
-      (close-file state-cur channel
-        (fn []
-          (go
-            (let [{:keys [path cancel exception]} (<! (clr/winforms-async-eval 'core.fs/folder-browser-dialog))]
-              (if exception
-                (do
-                  (swap! state-cur assoc-in [:open-root-directory :caption] "Cannot open directory")
-                  (loop []
-                    (case (<! channel)
-                      :ok nil
-                      (recur)))
-                  (swap! state-cur dissoc :open-root-directory))
-                (if path
-                  (<! (load-folder state-cur path channel)))))))))))
+    (when (<! (close-file? state-cur channel))
+      (let [{:keys [path cancel exception]} (<! (clr/winforms-async-eval 'core.fs/folder-browser-dialog))]
+        (if exception
+          (do
+            (swap! state-cur assoc-in [:open-root-directory :caption] "Cannot open directory")
+            (loop []
+              (case (<! channel)
+                :ok nil
+                (recur)))
+            (swap! state-cur dissoc :open-root-directory))
+          (if path
+            (<! (load-folder state-cur path channel))))))))
 
 (defn do-open-file [state-cur channel path]
   (go
@@ -201,13 +188,10 @@
 
 (defn open-file [state-cur channel path]
   (go
-    (<!
-      (close-file state-cur channel
-        (fn []
-          (go
-            (if (= (get-in @state-cur [:opened-file :path]) path)
-              (swap! state-cur dissoc :opened-file)
-              (<! (do-open-file state-cur channel path)))))))))
+    (when (<! (close-file? state-cur channel))
+      (if (= (get-in @state-cur [:opened-file :path]) path)
+        (swap! state-cur dissoc :opened-file)
+        (<! (do-open-file state-cur channel path))))))
 
 (defn reload-file [state-cur channel]
   (go
