@@ -121,24 +121,22 @@
                    {:path (get-in state [:folder :path])
                     :top-ns 'new})))))
 
-(defn save [state-cur state channel]
+(defn save [state-cur channel]
   (go
-    (as-> state state
-      (assoc state :save-file (:opened-file state))
-      (<! (clr/async-eval-in state 'core.fs/save [:save-file]))
-      (if (contains? (:save-file state) :exception)
-        (as-> state state
-          (assoc-in state [:save-file :caption] "Cannot save file")
-          (reset! state-cur state)
-          (loop []
-            (case (<! channel)
-              :ok (dissoc state :save-file)
-              (recur))))
-        (-> state
-          (set/rename-keys {:save-file :opened-file})
-          (assoc-in [:opened-file :dirty?] false)))
-      (<! (load-folder state-cur (root-path state) channel))
-      (reset! state-cur state))))
+    (let [[r v] (<! (clr/async-eval
+                      'core.fs/save
+                      (get-in @state-cur [:opened-file :path])
+                      (get-in @state-cur [:opened-file :text])))]
+      (case r
+        :last-write-time (swap! state-cur update-in [:opened-file] merge {:last-write-time v :dirty? false})
+        :exception (do
+                     (swap! state-cur assoc-in [:save-file :caption] "Cannot save file")
+                     (loop []
+                       (case (<! channel)
+                         :ok (swap! state-cur dissoc :save-file)
+                         (recur))))
+        nil))
+    (<! (load-folder state-cur (root-path @state-cur) channel))))
 
 (defn close-file [state-cur channel on-close-fn]
   (go
@@ -153,7 +151,8 @@
           (loop []
             (case (<! channel)
               :yes (as-> state state
-                     (<! (save state-cur state channel))
+                     (reset! state-cur state)
+                     (<! (save state-cur channel))
                      (dissoc state :close-file)
                      (reset! state-cur state)
                      (<! (on-close-fn state)))
@@ -257,7 +256,7 @@
           :open-file (<! (open-file state-cur channel arg))
           :new (<! (new-file-dialog state-cur channel))
           :delete (<! (delete-file-dialog state-cur channel))
-          :save (<! (save state-cur @state-cur channel))
+          :save (<! (save state-cur channel))
           :reload-file (<! (reload-file state-cur channel))
           :evaluate-form (swap! state-cur evaluate-form)
           :evaluate-script (swap! state-cur evaluate-script)

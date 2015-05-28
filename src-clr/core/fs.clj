@@ -76,16 +76,11 @@
           (assoc m :exception (.get_Message e))))
       m)))
 
-(defn save [m _]
-  (let [{:keys [path text]} m]
-    (if (and path text)
-      (try
-        (File/WriteAllText path text)
-        (assoc m :last-write-time
-          (File/GetLastWriteTimeUtc path))
-        (catch Exception e
-          (assoc m :exception (.get_Message e))))
-      m)))
+(defn save [path text _]
+  (try
+    (File/WriteAllText path text)
+    [:last-write-time (File/GetLastWriteTimeUtc path)]
+    (catch Exception e [:exception (.get_Message e)])))
 
 (defn exists [path _]
   (try
