@@ -71,14 +71,14 @@
     (catch Exception e {:exception (.get_Message e)})))
 
 (defn save
-  "Returns {:result #{:success :exception} :name string :last-write-time date-time}"
+  "Returns {:status #{:success :exception} :result {:name string :last-write-time date-time} string}"
   [path text _]
   (try
     (File/WriteAllText path text)
-    {:result :success
-     :name (Path/GetFileName path)
-     :last-write-time (File/GetLastWriteTimeUtc path)}
-    (catch Exception e {:result :exception :ex-message (.get_Message e)})))
+    {:status :success
+     :result {:name (Path/GetFileName path)
+              :last-write-time (File/GetLastWriteTimeUtc path)}}
+    (catch Exception e {:status :exception :result (.get_Message e)})))
 
 (defn- save-file-dialog [initial-directory]
   (doto (SaveFileDialog.)
@@ -90,15 +90,15 @@
     (.set_AddExtension true)))
 
 (defn save-as
-  "Returns {:result #{:success :cancel :exception} :path string :name string :ex-message string}"
+  "Returns {:status #{:success :cancel :exception} :result {:path string} string}"
   [initial-directory _]
   (try
     (let [dialog (save-file-dialog initial-directory)]
       (if (= (.ShowDialog dialog) DialogResult/OK)
         (let [path (.get_FileName dialog)]
-          {:result :success :path path})
-        {:result :cancel}))
-    (catch Exception e {:result :exception :ex-message (.get_Message e)})))
+          {:status :success :result {:path path}})
+        {:status :cancel}))
+    (catch Exception e {:status :exception :result (.get_Message e)})))
 
 (defn exists [path _]
   (try

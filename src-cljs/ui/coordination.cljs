@@ -82,7 +82,9 @@
                    {:path (get-in state [:folder :path])
                     :top-ns 'new})))))
 
-(defn cannot-save-file [state-cur message channel]
+(defn cannot-save-file
+  "Displays exception, returns false."
+  [state-cur message channel]
   (go
     (swap! state-cur update-in [:save-file] merge {:caption "Cannot save file"
                                                    :exception message})
@@ -98,28 +100,27 @@
   [state-cur channel]
   (go
     (if (get-in @state-cur [:opened-file :path])
-      (let [{:keys [result name last-write-name ex-message]}
+      (let [{:keys [status result]}
             (<! (clr/async-eval
                   'core.fs/save
                   (get-in @state-cur [:opened-file :path])
                   (get-in @state-cur [:opened-file :text])))]
-        (case result
+        (case status
           :success (do
-                     (swap! state-cur update-in [:opened-file] merge {:name name
-                                                                      :last-write-time last-write-name
-                                                                      :dirty? false})
+                     (swap! state-cur update-in [:opened-file] merge (merge {:dirty? false} result))
                      (<! (load-folder state-cur (root-path @state-cur) channel))
                      true)
-          :exception (<! (cannot-save-file state-cur ex-message channel))
+          :exception (<! (cannot-save-file state-cur result channel))
           false))
-      (let [{:keys [result path ex-message]}
+      (let [{:keys [status result]}
             (<! (clr/winforms-async-eval 'core.fs/save-as (root-path @state-cur)))]
-        (case result
+        (case status
           :success (do
-                     (swap! state-cur update-in [:opened-file] merge {:path path})
+                     (swap! state-cur update-in [:opened-file] merge result)
                      (save state-cur channel))
           :cancel false
-          :exception (<! (cannot-save-file state-cur ex-message channel)))))))
+          :exception (<! (cannot-save-file state-cur result channel))
+          false)))))
 
 (defn close-file?
   "Returns true if file was closed, false if not."
