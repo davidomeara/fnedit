@@ -5,9 +5,11 @@
             [ui.widgets :as widgets]
             [ui.debug :as debug]))
 
+(def z-count (atom 10))
+
 (defn dialog [contents & {:keys [style]}]
   [:div.fullscreen.transparent
-   {:style {:z-index "11"
+   {:style {:z-index (swap! z-count inc)
             :display "flex"
             :flex-direction "column"
             :justify-content "flex-start"
@@ -16,7 +18,7 @@
     {:style (merge {:color "#222"
                     :border "1px solid #b6b6b7"
                     :background-color "#f5f2f1"
-                    :z-index "12"
+                    :z-index (swap! z-count inc)
                     :margin-top "100px"
                     :padding "20px"
                     :width "400px"

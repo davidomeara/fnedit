@@ -115,24 +115,32 @@
                    {:path (get-in state [:folder :path])
                     :top-ns 'new})))))
 
-(defn save [state-cur channel]
+(defn save
+  "Returns true if success, false if failed."
+  [state-cur channel]
   (go
     (let [[r v] (<! (clr/async-eval
                       'core.fs/save
                       (get-in @state-cur [:opened-file :path])
                       (get-in @state-cur [:opened-file :text])))]
       (case r
-        :last-write-time (swap! state-cur update-in [:opened-file] merge {:last-write-time v :dirty? false})
+        :last-write-time (do
+                           (swap! state-cur update-in [:opened-file] merge {:last-write-time v :dirty? false})
+                           (<! (load-folder state-cur (root-path @state-cur) channel))
+                           true)
         :exception (do
                      (swap! state-cur assoc-in [:save-file :caption] "Cannot save file")
                      (loop []
                        (case (<! channel)
-                         :ok (swap! state-cur dissoc :save-file)
-                         (recur))))
-        nil))
-    (<! (load-folder state-cur (root-path @state-cur) channel))))
+                         :ok nil
+                         (recur)))
+                     (swap! state-cur dissoc :save-file)
+                     false)
+        false))))
 
-(defn close-file? [state-cur channel]
+(defn close-file?
+  "Returns true if file was closed, false if not."
+  [state-cur channel]
   (go
     (if (or
           (get-in @state-cur [:opened-file :dirty?])
@@ -142,11 +150,13 @@
         (swap! state-cur assoc-in [:close-file :caption] "Would you like to save this file before closing it?")
         (let [result (loop []
                        (case (<! channel)
-                         :yes (do (<! (save state-cur channel)) true)
+                         :yes (if (<! (save state-cur channel))
+                                true
+                                (recur))
                          :no true
                          :cancel false
-                         (recur))
-                       (swap! state-cur dissoc :close-file))]
+                         (recur)))]
+          (swap! state-cur dissoc :close-file)
           result))
       true)))
 
