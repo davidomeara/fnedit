@@ -62,15 +62,11 @@
               (assoc :exception (.get_Message e)))))
       m)))
 
-(defn delete [m _]
-  (let [path (:path m)]
-    (if path
-      (try
-        (File/Delete path)
-        m
-        (catch Exception e
-          (assoc m :exception (.get_Message e))))
-      m)))
+(defn delete [path _]
+  (try
+    (File/Delete path)
+    nil
+    (catch Exception e {:exception (.get_Message e)})))
 
 (defn save [path text _]
   (try

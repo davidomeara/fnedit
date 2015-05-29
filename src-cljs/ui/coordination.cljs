@@ -66,25 +66,19 @@
 
 (defn delete-file-dialog [state-cur channel]
   (go
-    (as-> @state-cur state
-      (assoc-in state [:delete-file :caption]
-        "Are you sure you would like to delete this file?")
-      (reset! state-cur state)
-      (loop [state state]
-        (case (<! channel)
-          :yes (as-> state state
-                 (assoc-in state [:delete-file :path] (get-in state [:opened-file :path]))
-                 (<! (clr/async-eval-in state 'core.fs/delete [:delete-file]))
-                 (reset! state-cur state)
-                 (if (contains? (:delete-file state) :exception)
-                   (recur state)
-                   (-> state
-                     (dissoc :delete-file)
-                     (dissoc :opened-file))))
-          :no (dissoc state :delete-file)
-          (recur state)))
-      (<! (load-folder state-cur (root-path state) channel))
-      (reset! state-cur state))))
+    (swap! state-cur assoc-in [:delete-file :caption]
+           "Are you sure you would like to delete this file?")
+    (loop []
+      (case (<! channel)
+        :yes (let [{:keys [exception]} (<! (clr/async-eval 'core.fs/delete (get-in @state-cur [:opened-file :path])))]
+               (if exception
+                 (do (swap! state-cur assoc-in [:delete-file :exception] exception)
+                     (recur))
+                 (swap! state-cur dissoc :opened-file)))
+        :no nil
+        (recur)))
+    (swap! state-cur dissoc :delete-file)
+    (<! (load-folder state-cur (root-path @state-cur) channel))))
 
 (defn evaluate [state to-from-fn]
   (let [opened (:opened-file state)
