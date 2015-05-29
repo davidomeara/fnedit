@@ -25,7 +25,10 @@
       state-cur
       assoc
       :root
-      (<! (clr/async-eval 'core.fs/root-directory root-path #{})))))
+      (<! (clr/async-eval
+            'core.fs/root-directory
+            root-path
+            (:open-directories @state-cur))))))
 
 (defn- assoc-clj-validation-warning [s]
   (assoc-in s [:new-file :validation]
@@ -156,7 +159,8 @@
                 :ok nil
                 (recur)))
             (swap! state-cur dissoc :open-root-directory))
-          (if path
+          (when path
+            (swap! state-cur update-in [:open-directories] clojure.set/union #{path})
             (<! (load-folder state-cur path channel))))))))
 
 (defn next-opened-id [state-cur]
@@ -221,8 +225,10 @@
     (disj s v)
     (clojure.set/union s #{v})))
 
-(defn toggle-open-directory [state-cur path]
-  (swap! state-cur update-in [:open-directories] toggle path))
+(defn toggle-open-directory [state-cur channel path]
+  (go
+    (swap! state-cur update-in [:open-directories] toggle path)
+    (<! (load-folder state-cur (root-path @state-cur) channel))))
 
 (defn periodically-send [v]
   (let [c (chan)]
@@ -238,7 +244,7 @@
       (let [[[cmd arg] _] (alts! [channel (periodically-send [:reload-file nil])])]
         (case cmd
           :open-root-directory (<! (open-folder-browser-dialog state-cur channel))
-          :toggle-open-directory (toggle-open-directory state-cur arg)
+          :toggle-open-directory (<! (toggle-open-directory state-cur channel arg))
           :open-file (<! (open-file state-cur channel arg))
           :new (<! (new-file-dialog state-cur channel))
           :delete (<! (delete-file-dialog state-cur channel))

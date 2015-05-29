@@ -12,30 +12,35 @@
             :padding-left (str (+ 5 (* 8 depth)) "px")}}
    txt])
 
-(defn div-style [opened?]
-  {:cursor "default"
+(defn file-div-style [opened?]
+  {:padding-left "18px"
+   :cursor "default"
    :color (if opened? "white" "#222")
    :background-color (if opened? "#2182fb" "transparent")})
 
 (defn file-div [depth {:keys [path name]} opened-file channel]
   [:div.font.unselectable
    {:on-click #(stop-event % (fn [] (put! channel [:open-file path])))
-    :style (div-style (= path (:path @opened-file)))}
+    :style (file-div-style (= path (:path @opened-file)))}
    [padded-div depth name]])
 
 (defn dir-div
   [depth [{:keys [path name]} {:keys [directories files]}] open-directories opened-file channel]
+
   [:div.font.unselectable
    {:on-click #(stop-event % (fn [] (put! channel [:toggle-open-directory path])))
-    :style (div-style (contains? open-directories path))}
+    :style {:cursor "default"
+            :color "#222"
+            :background-color "transparent"}}
 
    [padded-div depth
     [:span
-     (if (and
-           (nil? directories)
-           (nil? files))
-       [:i.ion-arrow-right-b]
-       [:i.ion-arrow-down-b])
+     (let [icon-style {:style {:display "inline-block"
+                               :width "14px"
+                               :height "14px"}}]
+       (if (contains? @open-directories path)
+         [:i.ion-arrow-down-b icon-style]
+         [:i.ion-arrow-right-b icon-style]))
      [:span {:style {:padding-left "4px"}} name]]]
 
    (let [directory (sort-by #(:name (key %)) directories)]
@@ -63,4 +68,4 @@
                    :min-width "100%"}}
      (let [roots (sort-by #(:name (key %)) @root)]
        (for [root roots]
-         ^{:key (key root)} [dir-div 0 root open-directories opened-file channel]))]]])
+         ^{:key (key root)} [dir-div 1 root open-directories opened-file channel]))]]])

@@ -105,17 +105,25 @@
     (File/Exists path)
     (catch Exception e false)))
 
-(defn- node [path open]
+(declare node)
+
+(defn- directory [path open]
+  [{:path path
+    :name (-> path DirectoryInfo. .get_Name)}
+   (when (contains? open path)
+     (node path open))])
+
+(defn- file [path]
+  {:path path
+   :name (Path/GetFileName path)})
+
+(defn node [path open]
   {:directories (->> (Directory/GetDirectories path)
-                     (map (fn [p] [{:path p
-                                    :name (-> p DirectoryInfo. .get_Name)}
-                                   (when (contains? open p)
-                                       (node p open))]))
+                     (map #(directory % open))
                      (into (hash-map)))
-   :files       (->> (Directory/GetFiles path)
-                     (map (fn [p] {:path p
-                                   :name (Path/GetFileName p)}))
-                     (into (hash-set)))})
+   :files (->> (Directory/GetFiles path)
+               (map file)
+               (into (hash-set)))})
 
 (defn remove-deleted-directory [open]
   (->> open
@@ -125,6 +133,4 @@
 
 (defn root-directory [path open _]
   (when path
-    {{:path path
-      :name (-> path DirectoryInfo. .get_Name)}
-     (node path open)}))
+    (apply hash-map (directory path open))))
