@@ -41,7 +41,6 @@
          (reagent/cursor state [:root])
          (reagent/cursor state [:opened-file])
          channel]
-        [modal-dialog/name-file (reagent/cursor state [:new-file]) channel]
         [modal-dialog/yes-no (reagent/cursor state [:delete-file]) channel]
         [modal-dialog/ok (reagent/cursor state [:ok-dialog]) channel]
         [modal-dialog/ok (reagent/cursor state [:open-root-directory]) channel]
@@ -64,7 +63,7 @@
        (when debug
          [(fn []
             [:pre
-             {:style {:height "400px"
+             {:style {:height "600px"
                       :margin 0
                       :overflow "auto"
                       :border-top "solid 1px #b6b6b7"}}

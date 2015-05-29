@@ -16,6 +16,7 @@
    (System.Windows.Forms
     Form
     FolderBrowserDialog
+    SaveFileDialog
     DialogResult)))
 
 (defn folder-browser-dialog [wrapper]
@@ -69,11 +70,35 @@
     nil
     (catch Exception e {:exception (.get_Message e)})))
 
-(defn save [path text _]
+(defn save
+  "Returns {:result #{:success :exception} :name string :last-write-time date-time}"
+  [path text _]
   (try
     (File/WriteAllText path text)
-    [:last-write-time (File/GetLastWriteTimeUtc path)]
-    (catch Exception e [:exception (.get_Message e)])))
+    {:result :success
+     :name (Path/GetFileName path)
+     :last-write-time (File/GetLastWriteTimeUtc path)}
+    (catch Exception e {:result :exception :ex-message (.get_Message e)})))
+
+(defn- save-file-dialog [initial-directory]
+  (doto (SaveFileDialog.)
+    (.set_Filter "Clojure file (*.clj)|*.clj")
+    (.set_FilterIndex 0)
+    (.set_InitialDirectory initial-directory)
+    (.set_ValidateNames true)
+    (.set_OverwritePrompt true)
+    (.set_AddExtension true)))
+
+(defn save-as
+  "Returns {:result #{:success :cancel :exception} :path string :name string :ex-message string}"
+  [initial-directory _]
+  (try
+    (let [dialog (save-file-dialog initial-directory)]
+      (if (= (.ShowDialog dialog) DialogResult/OK)
+        (let [path (.get_FileName dialog)]
+          {:result :success :path path})
+        {:result :cancel}))
+    (catch Exception e {:result :exception :ex-message (.get_Message e)})))
 
 (defn exists [path _]
   (try

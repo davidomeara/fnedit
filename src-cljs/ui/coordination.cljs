@@ -31,39 +31,6 @@
   (assoc-in s [:new-file :validation]
     "The script must have the extension .clj"))
 
-(defn new-file-dialog [state-cur channel]
-  (go
-    (as-> @state-cur state
-      (assoc state :new-file {:caption "New file name:"
-                              :file-name "new.clj"
-                              :show true})
-      (loop [state state]
-        (let [state (-> (reset! state-cur state)
-                      (update-in [:new-file] dissoc :validation)
-                      (update-in [:new-file] dissoc :exception))
-              [cmd file-name] (<! channel)]
-          (case cmd
-            :change (recur
-                      (if (clj-extension? file-name)
-                        state
-                        (assoc-clj-validation-warning state)))
-            :ok (if (clj-extension? file-name)
-                  (as-> state state
-                    (assoc-in state [:new-file :file-name] file-name)
-                    (assoc-in state [:new-file :folder-path] (root-path state))
-                    (<! (clr/async-eval-in state 'core.fs/combine-folder-path [:new-file]))
-                    (<! (clr/async-eval-in state 'core.fs/create [:new-file]))
-                    (if (contains? (:new-file state) :path)
-                      (as-> state state
-                        (<! (load-folder state-cur (root-path state) channel))
-                        ; set :new-file to be :opened-file
-                        (dissoc state :new-file))
-                      (recur state)))
-                  (recur (assoc-clj-validation-warning state)))
-            :cancel (dissoc state :new-file)
-            (recur state))))
-      (reset! state-cur state))))
-
 (defn delete-file-dialog [state-cur channel]
   (go
     (swap! state-cur assoc-in [:delete-file :caption]
@@ -115,28 +82,43 @@
                    {:path (get-in state [:folder :path])
                     :top-ns 'new})))))
 
+(defn cannot-save-file [state-cur channel]
+  (go
+    (swap! state-cur assoc-in [:save-file :caption] "Cannot save file")
+    (loop []
+      (case (<! channel)
+        :ok nil
+        (recur)))
+    (swap! state-cur dissoc :save-file)
+    false))
+
 (defn save
-  "Returns true if success, false if failed."
+  "Returns true if success, false if failed or canceled."
   [state-cur channel]
   (go
-    (let [[r v] (<! (clr/async-eval
-                      'core.fs/save
-                      (get-in @state-cur [:opened-file :path])
-                      (get-in @state-cur [:opened-file :text])))]
-      (case r
-        :last-write-time (do
-                           (swap! state-cur update-in [:opened-file] merge {:last-write-time v :dirty? false})
-                           (<! (load-folder state-cur (root-path @state-cur) channel))
-                           true)
-        :exception (do
-                     (swap! state-cur assoc-in [:save-file :caption] "Cannot save file")
-                     (loop []
-                       (case (<! channel)
-                         :ok nil
-                         (recur)))
-                     (swap! state-cur dissoc :save-file)
-                     false)
-        false))))
+    (if (get-in @state-cur [:opened-file :path])
+      (let [{:keys [result name last-write-name ex-message]}
+            (<! (clr/async-eval
+                  'core.fs/save
+                  (get-in @state-cur [:opened-file :path])
+                  (get-in @state-cur [:opened-file :text])))]
+        (case result
+          :success (do
+                     (swap! state-cur update-in [:opened-file] merge {:name name
+                                                                      :last-write-time last-write-name
+                                                                      :dirty? false})
+                     (<! (load-folder state-cur (root-path @state-cur) channel))
+                     true)
+          :exception (<! (cannot-save-file state-cur channel))
+          false))
+      (let [{:keys [result path ex-message]}
+            (<! (clr/winforms-async-eval 'core.fs/save-as (root-path @state-cur)))]
+        (case result
+          :success (do
+                     (swap! state-cur update-in [:opened-file] merge {:path path})
+                     (save state-cur channel))
+          :cancel false
+          :exception (<! (cannot-save-file state-cur channel)))))))
 
 (defn close-file?
   "Returns true if file was closed, false if not."
@@ -175,6 +157,17 @@
           (if path
             (<! (load-folder state-cur path channel))))))))
 
+(defn next-opened-id [state-cur]
+  (:opened-id-count (swap! state-cur update-in [:opened-id-count] inc)))
+
+(defn new-file-dialog [state-cur channel]
+  (go
+    (when (<! (close-file? state-cur channel))
+      (swap! state-cur assoc :opened-file {:id (next-opened-id state-cur)
+                                           :name "untitled"
+                                           :text ""
+                                           :dirty? true}))))
+
 (defn do-open-file [state-cur channel path]
   (go
     (let [{:keys [name text last-write-time exception]} (<! (clr/async-eval 'core.fs/read-all-text path))]
@@ -187,7 +180,8 @@
               (recur)))
           (swap! state-cur dissoc :open-file))
         (when (and path text)
-          (swap! state-cur assoc :opened-file {:path path
+          (swap! state-cur assoc :opened-file {:id (next-opened-id state-cur)
+                                               :path path
                                                :name name
                                                :last-write-time last-write-time
                                                :text text}))))

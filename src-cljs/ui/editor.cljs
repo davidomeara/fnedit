@@ -4,6 +4,7 @@
             [reagent.core :as reagent]
             [cljsjs.codemirror]
             [cljsjs.codemirror.mode.clojure]
+            [ui.js-util :refer [stop-event]]
             [ui.debug :as debug]))
 
 (defn line-widget [value]
@@ -101,7 +102,8 @@
                         :display "flex"
                         :flex-direction "column"}}
           [:div.unselectable
-           {:style {:display "flex"
+           {:on-context-menu #(stop-event %)
+            :style {:display "flex"
                     :flex-direction "row"
                     :border-bottom "1px solid #b6b6b7"
                     :background-color "#f5f2f1"}}
@@ -151,7 +153,7 @@
 (defn editor [opened channel]
   [:div {:style {:flex-grow 1
                  :position "relative"}}
-   (when (:path @opened)
-     (let [path-coll [(:path @opened)]]
-       (for [path path-coll]
-         ^{:key path} [make-editor opened channel])))])
+   (when @opened
+     (let [coll [@opened]]
+       (for [x coll]
+         ^{:key (:id x)} [make-editor opened channel])))])

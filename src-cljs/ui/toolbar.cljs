@@ -50,7 +50,7 @@
     [:span toolbar-style [:i.icon.ion-ios-trash-outline icon-style] "Delete"]
     13
     button-style
-    opened
+    (reagent/cursor opened [:path])
     #(put! out [:delete])]
 
    [button
