@@ -82,9 +82,10 @@
                    {:path (get-in state [:folder :path])
                     :top-ns 'new})))))
 
-(defn cannot-save-file [state-cur channel]
+(defn cannot-save-file [state-cur message channel]
   (go
-    (swap! state-cur assoc-in [:save-file :caption] "Cannot save file")
+    (swap! state-cur update-in [:save-file] merge {:caption "Cannot save file"
+                                                   :exception message})
     (loop []
       (case (<! channel)
         :ok nil
@@ -109,7 +110,7 @@
                                                                       :dirty? false})
                      (<! (load-folder state-cur (root-path @state-cur) channel))
                      true)
-          :exception (<! (cannot-save-file state-cur channel))
+          :exception (<! (cannot-save-file state-cur ex-message channel))
           false))
       (let [{:keys [result path ex-message]}
             (<! (clr/winforms-async-eval 'core.fs/save-as (root-path @state-cur)))]
@@ -118,7 +119,7 @@
                      (swap! state-cur update-in [:opened-file] merge {:path path})
                      (save state-cur channel))
           :cancel false
-          :exception (<! (cannot-save-file state-cur channel)))))))
+          :exception (<! (cannot-save-file state-cur ex-message channel)))))))
 
 (defn close-file?
   "Returns true if file was closed, false if not."
