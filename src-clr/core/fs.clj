@@ -36,7 +36,8 @@
 
 (defn read-all-text [path _]
   (try
-    {:text (File/ReadAllText path)
+    {:name (Path/GetFileName path)
+     :text (File/ReadAllText path)
      :last-write-time (File/GetLastWriteTimeUtc path)}
     (catch Exception e {:exception (.get_Message e)})))
 

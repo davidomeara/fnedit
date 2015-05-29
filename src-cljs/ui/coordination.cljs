@@ -177,7 +177,7 @@
 
 (defn do-open-file [state-cur channel path]
   (go
-    (let [{:keys [text last-write-time exception]} (<! (clr/async-eval 'core.fs/read-all-text path))]
+    (let [{:keys [name text last-write-time exception]} (<! (clr/async-eval 'core.fs/read-all-text path))]
       (if exception
         (do
           (swap! state-cur assoc-in [:open-file :caption] "Cannot open file")
@@ -187,7 +187,10 @@
               (recur)))
           (swap! state-cur dissoc :open-file))
         (when (and path text)
-          (swap! state-cur assoc :opened-file {:path path :last-write-time last-write-time :text text}))))
+          (swap! state-cur assoc :opened-file {:path path
+                                               :name name
+                                               :last-write-time last-write-time
+                                               :text text}))))
     (<! (load-folder state-cur (root-path @state-cur) channel))))
 
 (defn open-file [state-cur channel path]

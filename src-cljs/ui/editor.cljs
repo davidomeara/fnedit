@@ -97,7 +97,19 @@
          [:div {:style {:flex-grow 1
                         :position "absolute"
                         :width "100%"
-                        :height "100%"}}
+                        :height "100%"
+                        :display "flex"
+                        :flex-direction "column"}}
+          [:div.unselectable
+           {:style {:display "flex"
+                    :flex-direction "row"
+                    :border-bottom "1px solid #b6b6b7"
+                    :background-color "#f5f2f1"}}
+           [:div.font.unselectable
+            {:style {:flex-grow 0
+                     :padding "4px"
+                     :color "white"
+                     :background-color "#2182fb"}} (:name @opened)]]
           [:div {:style {:display "none"}} (:results @opened)]])
        :component-will-update
        (fn [this]
