@@ -12,26 +12,22 @@
             :padding-left (str (+ 5 (* 8 depth)) "px")}}
    txt])
 
-(defn div-style [path opened]
+(defn div-style [opened?]
   {:cursor "default"
-   :color (if (= path (:path @opened))
-            "white"
-            "#222")
-   :background-color (if (= path (:path @opened))
-                       "#2182fb"
-                       "transparent")})
+   :color (if opened? "white" "#222")
+   :background-color (if opened? "#2182fb" "transparent")})
 
-(defn file-div [depth {:keys [path name]} opened channel]
+(defn file-div [depth {:keys [path name]} opened-file channel]
   [:div.font.unselectable
    {:on-click #(stop-event % (fn [] (put! channel [:open-file path])))
-    :style (div-style path opened)}
+    :style (div-style (= path (:path @opened-file)))}
    [padded-div depth name]])
 
 (defn dir-div
-  [depth [{:keys [path name]} {:keys [directories files]}] opened channel]
+  [depth [{:keys [path name]} {:keys [directories files]}] open-directories opened-file channel]
   [:div.font.unselectable
    {:on-click #(stop-event % (fn [] (put! channel [:toggle-open-directory path])))
-    :style (div-style path opened)}
+    :style (div-style (contains? open-directories path))}
 
    [padded-div depth
     [:span
@@ -44,13 +40,13 @@
 
    (let [directory (sort-by #(:name (key %)) directories)]
      (for [directory directories]
-       ^{:key (key directory)} [dir-div (inc depth) directory opened channel]))
+       ^{:key (key directory)} [dir-div (inc depth) directory open-directories opened-file channel]))
 
    (let [files (sort-by :name files)]
      (for [file files]
-       ^{:key file} [file-div (inc depth) file opened channel]))])
+       ^{:key file} [file-div (inc depth) file opened-file channel]))])
 
-(defn tree-view [root opened channel]
+(defn tree-view [root open-directories opened-file channel]
   [:div.unselectable
    {:on-context-menu #(stop-event %)
     :style {:flex-grow 1
@@ -67,4 +63,4 @@
                    :min-width "100%"}}
      (let [roots (sort-by #(:name (key %)) @root)]
        (for [root roots]
-         ^{:key (key root)} [dir-div 0 root opened channel]))]]])
+         ^{:key (key root)} [dir-div 0 root open-directories opened-file channel]))]]])

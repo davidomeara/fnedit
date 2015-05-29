@@ -55,6 +55,7 @@
          120
          [tree-view
           (reagent/cursor state [:root])
+          (reagent/cursor state [:open-directories])
           (reagent/cursor state [:opened-file])
           channel]
          [editor
