@@ -4,12 +4,12 @@
             [ui.widgets :refer [button]]
             [ui.debug :as debug]))
 
-(defn padded-div [depth txt]
+(defn padded-div [depth txt attributes]
   [:div
-   {:style {:padding-top "4px"
-            :padding-right "5px"
-            :padding-bottom "6px"
-            :padding-left (str (+ 5 (* 8 depth)) "px")}}
+   (merge attributes {:style {:padding-top "4px"
+                              :padding-right "5px"
+                              :padding-bottom "6px"
+                              :padding-left (str (+ 5 (* 8 depth)) "px")}})
    txt])
 
 (defn file-div-style [opened?]
@@ -20,16 +20,15 @@
 
 (defn file-div [depth {:keys [path name]} opened-file channel]
   [:div.font.unselectable
-   {:on-click #(stop-event % (fn [] (put! channel [:open-file path])))
-    :style (file-div-style (= path (:path @opened-file)))}
-   [padded-div depth name]])
+   {:style (file-div-style (= path (:path @opened-file)))}
+   [padded-div depth name
+    {:on-double-click #(stop-event % (fn [] (put! channel [:open-file path])))}]])
 
 (defn dir-div
   [depth [{:keys [path name]} {:keys [directories files]}] open-directories opened-file channel]
 
   [:div.font.unselectable
-   {:on-click #(stop-event % (fn [] (put! channel [:toggle-open-directory path])))
-    :style {:cursor "default"
+   {:style {:cursor "default"
             :color "#222"
             :background-color "transparent"}}
 
@@ -41,7 +40,8 @@
        (if (contains? @open-directories path)
          [:i.ion-arrow-down-b icon-style]
          [:i.ion-arrow-right-b icon-style]))
-     [:span {:style {:padding-left "4px"}} name]]]
+     [:span {:style {:padding-left "4px"}} name]]
+    {:on-click #(stop-event % (fn [] (put! channel [:toggle-open-directory path])))}]
 
    (let [directory (sort-by #(:name (key %)) directories)]
      (for [directory directories]
