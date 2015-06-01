@@ -105,6 +105,22 @@
     (swap! state-cur dissoc :save-file)
     false))
 
+(declare save)
+
+(defn save-as
+  "Returns true if success, false if failed or canceled."
+  [state-cur channel]
+  (go
+    (let [{:keys [status result]}
+          (<! (clr/winforms-async-eval 'core.fs/save-as (root-path @state-cur)))]
+      (case status
+        :success (do
+                   (swap! state-cur update-in [:opened-file] merge result)
+                   (save state-cur channel))
+        :cancel false
+        :exception (<! (cannot-save-file state-cur result channel))
+        false))))
+
 (defn save
   "Returns true if success, false if failed or canceled."
   [state-cur channel]
@@ -120,17 +136,11 @@
                      (swap! state-cur update-in [:opened-file] merge (merge {:dirty? false} result))
                      (<! (load-folder state-cur (root-path @state-cur) channel))
                      true)
-          :exception (<! (cannot-save-file state-cur result channel))
+          :exception (do
+                       (<! (cannot-save-file state-cur result channel))
+                       (save-as state-cur channel))
           false))
-      (let [{:keys [status result]}
-            (<! (clr/winforms-async-eval 'core.fs/save-as (root-path @state-cur)))]
-        (case status
-          :success (do
-                     (swap! state-cur update-in [:opened-file] merge result)
-                     (save state-cur channel))
-          :cancel false
-          :exception (<! (cannot-save-file state-cur result channel))
-          false)))))
+      (save-as))))
 
 (defn close-file?
   "Returns true if file was closed, false if not."
@@ -167,7 +177,7 @@
                 (recur)))
             (swap! state-cur dissoc :open-root-directory))
           (when path
-            (swap! state-cur update-in [:open-directories] clojure.set/union #{path})
+            (swap! state-cur assoc :open-directories #{path})
             (<! (load-folder state-cur path channel))))))))
 
 (defn next-opened-id [state-cur]
