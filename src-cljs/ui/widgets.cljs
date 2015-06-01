@@ -9,7 +9,6 @@
       (f))
     nil))
 
-;; add submit option
 (defn button [title tabindex style enabled-cursor on-click-fn]
   (fn []
     (if @enabled-cursor

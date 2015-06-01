@@ -1,4 +1,5 @@
 (ns ui.modal-dialog
+  (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs.core.async :refer [put!]]
             [reagent.core :as reagent]
             [ui.js-util :refer [stop-event]]
@@ -8,23 +9,27 @@
 (def z-count (atom 10))
 
 (defn dialog [contents & {:keys [style]}]
-  [:div.fullscreen.transparent
-   {:style {:z-index (swap! z-count inc)
-            :display "flex"
-            :flex-direction "column"
-            :justify-content "flex-start"
-            :align-items "center"}}
-   [:div.font
-    {:style (merge {:color "#222"
-                    :border "1px solid #b6b6b7"
-                    :background-color "#f5f2f1"
-                    :z-index (swap! z-count inc)
-                    :margin-top "100px"
-                    :padding "20px"
-                    :width "400px"
-                    :display "flex"
-                    :flex-direction "column"} style)}
-    contents]])
+  (reagent/create-class
+    {:render
+     (fn []
+       [:div.fullscreen.transparent
+        {:style {:z-index (swap! z-count inc)
+                 :display "flex"
+                 :flex-direction "column"
+                 :justify-content "flex-start"
+                 :align-items "center"}}
+        [:div.font
+         {:style (merge {:color "#222"
+                         :border "1px solid #b6b6b7"
+                         :background-color "#f5f2f1"
+                         :z-index (swap! z-count inc)
+                         :margin-top "100px"
+                         :padding "20px"
+                         :width "400px"
+                         :display "flex"
+                         :flex-direction "column"} style)}
+         contents]])
+     :component-did-mount (fn [_] (-> js/document .-activeElement .blur))}))
 
 (defn name-file
   "state {:caption string :validation string :exception string :file-name string} :show, out [:cancel input] [:ok input]"
@@ -121,10 +126,10 @@
                      :flex-direction "row-reverse"}}
        (->> choices
          (partition 3)
-         reverse
          (map-indexed
            (fn [i [k t v]]
-             ^{:key k} [t v i (delay true) #(put! out k)])))]]]))
+             ^{:key k} [t v (inc i) (delay true) #(put! out k)]))
+         reverse)]]]))
 
 (defn ok
   [state out]

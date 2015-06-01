@@ -58,7 +58,14 @@
           channel]
          [editor
           (reagent/cursor state [:opened-file])
-          channel]]]
+          channel]]
+        [:div.font.unselectable
+         {:on-context-menu #(stop-event %)
+          :style {:background-color "#f5f2f1"
+                  :padding "2px"
+                  :height "1.2em"
+                  :border-top "solid 1px #b6b6b7"}}
+         (:status @state)]]
        (when debug
          [(fn []
             [:pre
