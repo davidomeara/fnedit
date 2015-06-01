@@ -125,7 +125,7 @@
                (map file)
                (into (hash-set)))})
 
-(defn remove-deleted-directory [open]
+(defn remove-deleted-directories [open _]
   (->> open
        (map #(when (Directory/Exists %) %))
        (remove nil?)

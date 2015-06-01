@@ -8,7 +8,7 @@
   [:div
    (merge attributes {:style {:padding-top "4px"
                               :padding-right "5px"
-                              :padding-bottom "6px"
+                              :padding-bottom "4px"
                               :padding-left (str (+ 5 (* 8 depth)) "px")}})
    txt])
 
@@ -22,7 +22,7 @@
   [:div.font.unselectable
    {:style (file-div-style (= path (:path @opened-file)))}
    [padded-div depth name
-    {:on-double-click #(stop-event % (fn [] (put! channel [:open-file path])))}]])
+    {:on-click #(stop-event % (fn [] (put! channel [:open-file path])))}]])
 
 (defn dir-div
   [depth [{:keys [path name]} {:keys [directories files]}] open-directories opened-file channel]

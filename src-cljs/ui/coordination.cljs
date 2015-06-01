@@ -24,6 +24,13 @@
     (swap!
       state-cur
       assoc
+      :open-directories
+      (<! (clr/async-eval
+            'core.fs/remove-deleted-directories
+            (:open-directories @state-cur))))
+    (swap!
+      state-cur
+      assoc
       :root
       (<! (clr/async-eval
             'core.fs/root-directory
