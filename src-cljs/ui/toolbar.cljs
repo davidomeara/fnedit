@@ -22,8 +22,9 @@
                          :font-size "18px"}})
 
 (defn toolbar [opened out]
-  [:div
+  [:div.unselectable
    {:on-context-menu #(stop-event %)
+    :on-focus #(-> % .-nativeEvent .-target .blur)
     :style {:flex-grow 0
             :flex-shrink 0
             :display "flex"
@@ -33,28 +34,28 @@
 
    [button
     [:span toolbar-style [:i.icon.ion-ios-folder-outline icon-style] "Open"]
-    10
+    -1
     button-style
     (delay true)
     #(put! out [:open-root-directory])]
 
    [button
     [:span toolbar-style [:i.icon.ion-ios-compose-outline icon-style] "New"]
-    11
+    -1
     button-style
     (delay true)
     #(put! out [:new])]
 
    [button
     [:span toolbar-style [:i.icon.ion-ios-trash-outline icon-style] "Delete"]
-    13
+    -1
     button-style
     (reagent/cursor opened [:path])
     #(put! out [:delete])]
 
    [button
     [:span toolbar-style [:i.icon.ion-ios-download-outline icon-style] "Save"]
-    14
+    -1
     button-style
     (reagent/cursor opened [:dirty?])
     #(put! out [:save])]
@@ -63,21 +64,21 @@
     [:span toolbar-style
      [:span {:style {:margin-right "5px"}} "(...)"]
      "Eval selection"]
-    15
+    -1
     button-style
     (reagent/cursor opened [:cursor-selection])
     #(put! out [:evaluate-form nil])]
 
    [button
     [:span toolbar-style [:i.icon.ion-ios-arrow-thin-down icon-style] "Eval file"]
-    16
+    -1
     button-style
     opened
     #(put! out [:evaluate-script nil])]
 
    [button
     [:span toolbar-style [:i.icon.ion-ios-download-outline icon-style] "AOT compile"]
-    17
+    -1
     button-style
     (delay true)
     #(put! out [:aot-compile nil])]])

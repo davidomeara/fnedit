@@ -3,7 +3,7 @@
             [ui.js-util :refer [stop-event]]
             [ui.debug :as debug]))
 
-(defn key-press [f]
+(defn key-down [f]
   (fn [e]
     (when (= (.-which e) 13)
       (f))
@@ -15,7 +15,7 @@
       [:a.unselectable.widget-behavior.widget-color.font
        {:tabIndex tabindex
         :on-click #(stop-event % (fn [] (on-click-fn)))
-        :on-key-press (key-press on-click-fn)
+        :on-key-down (key-down on-click-fn)
         :style (merge style {:display "inline-block"
                              :cursor "pointer"})}
        title]
@@ -60,7 +60,7 @@
                                                       :background "white"} style)}
                 [:input {:tabIndex tabindex
                          :on-change #(on-change-fn (reset! value-cursor (-> % .-target .-value)))
-                         :on-key-press (key-press on-enter-fn)
+                         :on-key-down (key-down on-enter-fn)
                          :type "text"
                          :value @value-cursor
                          :style {:width "100%"}}]])}))

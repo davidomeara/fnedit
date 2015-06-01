@@ -1,5 +1,4 @@
 (ns ui.modal-dialog
-  (:require-macros [cljs.core.async.macros :refer [go]])
   (:require [cljs.core.async :refer [put!]]
             [reagent.core :as reagent]
             [ui.js-util :refer [stop-event]]

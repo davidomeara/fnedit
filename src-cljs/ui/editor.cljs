@@ -119,8 +119,7 @@
                results (:results @opened)]
            (when (not= results @cached-results)
              (evaluate-script-results cm results)
-             (reset! cached-results results))
-           #_(go (.focus cm))))
+             (reset! cached-results results))))
        :component-did-mount
        (fn [this]
          (let [cm (js/CodeMirror.

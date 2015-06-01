@@ -6,5 +6,5 @@
    (.preventDefault e))
   ([e f]
    (stop-event e)
-   (f)
+   (f e)
    nil))
