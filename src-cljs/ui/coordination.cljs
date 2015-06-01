@@ -112,7 +112,10 @@
   [state-cur channel]
   (go
     (let [{:keys [status result]}
-          (<! (clr/winforms-async-eval 'core.fs/save-as (root-path @state-cur)))]
+          (<! (clr/winforms-async-eval
+                'core.fs/save-as
+                (root-path @state-cur)
+                (if-let[n (get-in @state-cur [:opened-file :name])] n "new.clj")))]
       (case status
         :success (do
                    (swap! state-cur update-in [:opened-file] merge result)
@@ -140,7 +143,7 @@
                        (<! (cannot-save-file state-cur result channel))
                        (save-as state-cur channel))
           false))
-      (save-as))))
+      (save-as state-cur channel))))
 
 (defn close-file?
   "Returns true if file was closed, false if not."

@@ -80,8 +80,9 @@
               :last-write-time (File/GetLastWriteTimeUtc path)}}
     (catch Exception e {:status :exception :result (.get_Message e)})))
 
-(defn- save-file-dialog [initial-directory]
+(defn- save-file-dialog [initial-directory initial-file-name]
   (doto (SaveFileDialog.)
+    (.set_FileName initial-file-name)
     (.set_Filter "Clojure file (*.clj)|*.clj")
     (.set_FilterIndex 0)
     (.set_InitialDirectory initial-directory)
@@ -91,9 +92,9 @@
 
 (defn save-as
   "Returns {:status #{:success :cancel :exception} :result {:path string} string}"
-  [initial-directory _]
+  [initial-directory initial-file-name _]
   (try
-    (let [dialog (save-file-dialog initial-directory)]
+    (let [dialog (save-file-dialog initial-directory initial-file-name)]
       (if (= (.ShowDialog dialog) DialogResult/OK)
         (let [path (.get_FileName dialog)]
           {:status :success :result {:path path}})
