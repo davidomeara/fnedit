@@ -169,19 +169,18 @@
 
 (defn open-folder-browser-dialog [state-cur channel]
   (go
-    (when (<! (close-file? state-cur channel))
-      (let [{:keys [path cancel exception]} (<! (clr/winforms-async-eval 'core.fs/folder-browser-dialog))]
-        (if exception
-          (do
-            (swap! state-cur assoc-in [:open-root-directory :caption] "Cannot open directory")
-            (loop []
-              (case (<! channel)
-                :ok nil
-                (recur)))
-            (swap! state-cur dissoc :open-root-directory))
-          (when path
-            (swap! state-cur assoc :open-directories #{path})
-            (<! (load-folder state-cur path channel))))))))
+    (let [{:keys [path cancel exception]} (<! (clr/winforms-async-eval 'core.fs/folder-browser-dialog))]
+      (if exception
+        (do
+          (swap! state-cur assoc-in [:open-root-directory :caption] "Cannot open directory")
+          (loop []
+            (case (<! channel)
+              :ok nil
+              (recur)))
+          (swap! state-cur dissoc :open-root-directory))
+        (when path
+          (swap! state-cur assoc :open-directories #{path})
+          (<! (load-folder state-cur path channel)))))))
 
 (defn next-opened-id [state-cur]
   (:opened-id-count (swap! state-cur update-in [:opened-id-count] inc)))

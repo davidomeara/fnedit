@@ -38,7 +38,6 @@
                  :flex-direction "column"
                  :flex-grow 1}}
         [toolbar
-         (reagent/cursor state [:root])
          (reagent/cursor state [:opened-file])
          channel]
         [modal-dialog/yes-no (reagent/cursor state [:delete-file]) channel]

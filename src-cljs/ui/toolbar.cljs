@@ -5,7 +5,6 @@
             [ui.widgets :refer [button]]
             [ui.debug :as debug]))
 
-
 (def button-style
   {:flex-grow 0
    :flex-shrink 0
@@ -22,7 +21,7 @@
 (def icon-style {:style {:margin-right "5px"
                          :font-size "18px"}})
 
-(defn toolbar [root opened out]
+(defn toolbar [opened out]
   [:div
    {:on-context-menu #(stop-event %)
     :style {:flex-grow 0
@@ -43,7 +42,7 @@
     [:span toolbar-style [:i.icon.ion-ios-compose-outline icon-style] "New"]
     11
     button-style
-    root
+    (delay true)
     #(put! out [:new])]
 
    [button
@@ -80,5 +79,5 @@
     [:span toolbar-style [:i.icon.ion-ios-download-outline icon-style] "AOT compile"]
     17
     button-style
-    root
+    (delay true)
     #(put! out [:aot-compile nil])]])
