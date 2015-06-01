@@ -109,29 +109,60 @@
 (declare node)
 
 (defn- directory [path open]
-  [{:path path
-    :name (-> path DirectoryInfo. .get_Name)}
-   (when (contains? open path)
-     (node path open))])
+  (try
+    (when (Directory/Exists path)
+      [{:path path
+        :name (-> path DirectoryInfo. .get_Name)}
+       (when (contains? open path)
+         (node path open))])
+    (catch Exception e nil)))
 
 (defn- file [path]
-  {:path path
-   :name (Path/GetFileName path)})
+  (try
+    {:path path
+     :name (Path/GetFileName path)}
+    (catch Exception e nil)))
 
-(defn node [path open]
-  {:directories (->> (Directory/GetDirectories path)
-                     (map #(directory % open))
-                     (into (hash-map)))
-   :files (->> (Directory/GetFiles path)
-               (map file)
-               (into (hash-set)))})
+(defn- get-directories [path]
+  (try
+    (Directory/GetDirectories path)
+    (catch Exception e ())))
+
+(defn- realize-directories [directory-paths open]
+  (->> directory-paths
+       (map #(directory % open))
+       (remove nil?)
+       (into {})))
+
+(defn- directories [path open]
+  (realize-directories (get-directories path) open))
+
+(defn- get-files [path]
+  (try
+    (Directory/GetFiles path)
+    (catch Exception e ())))
+
+(defn- files [path]
+  (->> (get-files path)
+       (map file)
+       (remove nil?)
+       (into #{})))
+
+(defn- node [path open]
+  {:directories (directories path open)
+   :files (files path)})
+
+(defn- directory-exists [path]
+  (try
+    (when (Directory/Exists path)
+      path)
+    (catch Exception e nil)))
 
 (defn remove-deleted-directories [open _]
   (->> open
-       (map #(when (Directory/Exists %) %))
+       (map directory-exists)
        (remove nil?)
-       (into (hash-set))))
+       (into #{})))
 
 (defn root-directory [path open _]
-  (when path
-    (apply hash-map (directory path open))))
+  (realize-directories [path] open))
