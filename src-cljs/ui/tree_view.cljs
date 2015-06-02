@@ -1,6 +1,6 @@
 (ns ui.tree-view
   (:require [cljs.core.async :refer [put!]]
-            [ui.js-util :refer [stop-event]]
+            [ui.events :as events]
             [ui.widgets :refer [button]]
             [ui.debug :as debug]))
 
@@ -22,7 +22,7 @@
   [:div.font.unselectable
    {:style (file-div-style (= path (:path @opened-file)))}
    [padded-div depth name
-    {:on-click #(stop-event % (fn [] (put! channel [:open-file path])))}]])
+    {:on-click #(events/stop-event % (fn [] (put! channel [:open-file path])))}]])
 
 (defn dir-div
   [depth [{:keys [path name]} {:keys [directories files]}] open-directories opened-file channel]
@@ -41,7 +41,7 @@
          [:i.ion-arrow-down-b icon-style]
          [:i.ion-arrow-right-b icon-style]))
      [:span {:style {:padding-left "4px"}} name]]
-    {:on-click #(stop-event % (fn [] (put! channel [:toggle-open-directory path])))}]
+    {:on-click #(events/stop-event % (fn [] (put! channel [:toggle-open-directory path])))}]
 
    (let [directory (sort-by #(:name (key %)) directories)]
      (for [directory directories]
@@ -53,7 +53,7 @@
 
 (defn tree-view [root open-directories opened-file channel]
   [:div.unselectable
-   {:on-context-menu #(stop-event %)
+   {:on-context-menu #(events/stop-event %)
     :style {:flex-grow 1
             :display "flex"
             :flex-direction "column"

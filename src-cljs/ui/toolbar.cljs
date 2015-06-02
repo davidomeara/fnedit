@@ -1,7 +1,7 @@
 (ns ui.toolbar
   (:require [cljs.core.async :refer [put!]]
             [reagent.core :as reagent]
-            [ui.js-util :refer [stop-event]]
+            [ui.events :as events]
             [ui.widgets :refer [button]]
             [ui.debug :as debug]))
 
@@ -23,7 +23,7 @@
 
 (defn toolbar [opened out]
   [:div.unselectable
-   {:on-context-menu #(stop-event %)
+   {:on-context-menu #(events/stop-event %)
     :on-focus #(-> % .-nativeEvent .-target .blur)
     :style {:flex-grow 0
             :flex-shrink 0

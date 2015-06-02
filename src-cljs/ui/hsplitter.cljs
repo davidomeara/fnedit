@@ -2,7 +2,7 @@
   (:require-macros [cljs.core.async.macros :refer [go-loop]])
   (:require [cljs.core.async :refer [chan put! <!]]
             [reagent.core :as reagent]
-            [ui.js-util :refer [stop-event]]
+            [ui.events :as events]
             [ui.debug :as debug]))
 
 (defn set-left-width! [state [client-x] min-left-width]
@@ -20,7 +20,7 @@
 (defn hsplitter [initial-left-width min-left-width left right]
   (let [c (chan)
         state (reagent/atom {:left-width initial-left-width})
-        mouse-down (fn [e] (stop-event e #(put! c [:down nil])))
+        mouse-down (fn [e] (events/stop-event e #(put! c [:down nil])))
         mouse-move (fn [e] (put! c [:move (client-x-width e)]) nil)
         mouse-up (fn [e] (put! c [:up nil]) nil)]
 
@@ -51,7 +51,7 @@
           left]
          [:div
           {:on-mouse-down mouse-down
-           :on-context-menu #(stop-event %)
+           :on-context-menu #(events/stop-event %)
            :style {:cursor "ew-resize"
                    :margin "0 -4px 0 -4px"
                    :width "9px"

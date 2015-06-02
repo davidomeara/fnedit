@@ -1,7 +1,7 @@
 (ns ui.modal-dialog
   (:require [cljs.core.async :refer [put!]]
             [reagent.core :as reagent]
-            [ui.js-util :refer [stop-event]]
+            [ui.events :as events]
             [ui.widgets :as widgets]
             [ui.debug :as debug]))
 
@@ -38,7 +38,7 @@
       (when @state
         [dialog
          [:form.unselectable
-          {:on-submit #(stop-event %)}
+          {:on-submit #(events/stop-event %)}
           [:span {:style {:margin "2px"
                           :display "flex"
                           :flex-direction "row"}} (:caption @state)]
@@ -71,7 +71,7 @@
       (when @state
         [dialog
          [:form.unselectable
-          {:on-submit #(stop-event %)
+          {:on-submit #(events/stop-event %)
            :style {:height "100%"
                    :display "flex"
                    :flex-direction "column"}}
@@ -90,7 +90,7 @@
                          :flex-direction "row-reverse"}}
            [widgets/negative-button "Close" 2 (delay true) #(put! out [:close nil])]
            [widgets/positive-button "Compile" 1 (delay true) #(put! out [:compile @input-atom])]]
-          [:textarea {:on-submit #(stop-event %)
+          [:textarea {:on-submit #(events/stop-event %)
                       :value "qwerty"
                       :readOnly true
                       :style {:display "flex"

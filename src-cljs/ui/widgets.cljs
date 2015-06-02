@@ -1,6 +1,6 @@
 (ns ui.widgets
   (:require [reagent.core :as reagent]
-            [ui.js-util :refer [stop-event]]
+            [ui.events :as events]
             [ui.debug :as debug]))
 
 (defn key-down [f]
@@ -14,7 +14,7 @@
     (if @enabled-cursor
       [:a.unselectable.widget-behavior.widget-color.font
        {:tabIndex tabindex
-        :on-click #(stop-event % (fn [] (on-click-fn)))
+        :on-click #(events/stop-event % (fn [] (on-click-fn)))
         :on-key-down (key-down on-click-fn)
         :style (merge style {:display "inline-block"
                              :cursor "pointer"})}

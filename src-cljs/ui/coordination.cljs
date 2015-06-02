@@ -1,10 +1,12 @@
 (ns ui.coordination
   (:require-macros [cljs.core.async.macros :refer [go go-loop]])
-  (:require [cljs.core.async :refer [chan <! >! put! timeout alts!]]
+  (:require [clojure.set :as set]
+            [cljs.core.async :refer [chan <! >! timeout alts!]]
             [ui.data :as data]
             [ui.clr :as clr]
             [ui.debug :as debug]
-            [clojure.set :as set]))
+            [ui.events :as events]
+            [ui.utils :as utils]))
 
 (defn root-path [state]
   (->> state
@@ -115,7 +117,7 @@
           (<! (clr/winforms-async-eval
                 'core.fs/save-as
                 (root-path @state-cur)
-                (if-let[n (get-in @state-cur [:opened-file :name])] n "new.clj")))]
+                (if-let [n (get-in @state-cur [:opened-file :name])] n "new.clj")))]
       (case status
         :success (do
                    (swap! state-cur update-in [:opened-file] merge result)
@@ -239,14 +241,9 @@
           (swap! state-cur assoc-in [:opened-file :dirty?] true))))
     (<! (load-folder state-cur (root-path @state-cur) channel))))
 
-(defn toggle [s v]
-  (if (contains? s v)
-    (disj s v)
-    (clojure.set/union s #{v})))
-
 (defn toggle-open-directory [state-cur channel path]
   (go
-    (swap! state-cur update-in [:open-directories] toggle path)
+    (swap! state-cur update-in [:open-directories] utils/toggle path)
     (<! (load-folder state-cur (root-path @state-cur) channel))))
 
 (defn periodically-send [v]
@@ -275,4 +272,5 @@
           :before-change (swap! state-cur data/shift-results arg)
           :change (swap! state-cur data/update-text arg)
           :cursor-selection (swap! state-cur data/update-cursor-selection arg)
+          ;:keydown (events/dispatch js/window arg)
           :default)))))

@@ -4,7 +4,7 @@
             [reagent.core :as reagent]
             [cljsjs.codemirror]
             [cljsjs.codemirror.mode.clojure]
-            [ui.js-util :refer [stop-event]]
+            [ui.events :as events]
             [ui.debug :as debug]))
 
 (defn line-widget [value]
@@ -102,7 +102,7 @@
                         :display "flex"
                         :flex-direction "column"}}
           [:div.unselectable
-           {:on-context-menu #(stop-event %)
+           {:on-context-menu #(events/stop-event %)
             :style {:display "flex"
                     :flex-direction "row"
                     :border-bottom "1px solid #b6b6b7"

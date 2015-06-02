@@ -2,8 +2,8 @@
   (:require [cljs.core.async :refer [chan]]
             [reagent.core :as reagent]
             [ui.clr :as clr]
+            [ui.events :as events]
             [ui.coordination :as coordination]
-            [ui.js-util :refer [stop-event]]
             [ui.editor :refer [editor]]
             [ui.hsplitter :refer [hsplitter]]
             [ui.tree-view :refer [tree-view]]
@@ -17,12 +17,16 @@
   (when debug
     (enable-console-print!))
 
-  (.addEventListener js/window "dragover" stop-event)
-  (.addEventListener js/window "drop" stop-event)
+  (.addEventListener js/window "dragover" events/stop-event)
+  (.addEventListener js/window "drop" events/stop-event)
 
   (let [channel (chan)]
 
     (coordination/files state channel)
+
+    ;(events/capture :keydown channel)
+    ;keypress
+    ;keyup
 
     (reagent/render
       [:div
@@ -60,7 +64,7 @@
           (reagent/cursor state [:opened-file])
           channel]]
         [:div.font.unselectable
-         {:on-context-menu #(stop-event %)
+         {:on-context-menu #(events/stop-event %)
           :style {:background-color "#f5f2f1"
                   :padding "2px"
                   :height "1.2em"
