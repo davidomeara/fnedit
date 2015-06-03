@@ -12,21 +12,53 @@
    (f e)
    nil))
 
-(def dispatched (atom #{}))
+(def modifier-keys
+  #{:altKey
+    :ctrlKey
+    :metaKey
+    :shiftKey})
 
-(defn- event-handler [event-type channel]
+(defn modifier-set
+  "Takes an event, returns the set of true modifier keys."
+  [e]
+  (->> modifier-keys
+    (map (fn [k] [k (aget e (name k))]))
+    (into {})
+    (filter val)
+    (map key)
+    (into #{})))
+
+(defn key-combination
+  "Normalizes "
+  [e]
+  {:key-code (.-keyCode e)
+   :modifiers (modifier-set e)})
+
+(defn key-command [e]
+  (case (key-combination e)
+    ;Ctrl-O
+    {:key-code 79 :modifiers #{:ctrlKey}} :open-root-directory
+
+    ;Ctrl-N
+    {:key-code 78 :modifiers #{:ctrlKey}} :new
+
+    ;Ctrl-S
+    {:key-code 83 :modifiers #{:ctrlKey}} :save
+
+    ;Ctrl-Enter
+    {:key-code 13 :modifiers #{:ctrlKey}} :evaluate-form
+
+    ;Ctrl-Shift-Enter
+    {:key-code 13 :modifiers #{:ctrlKey :shiftKey}} :evaluate-script
+
+    ;not a command, pass through
+    nil))
+
+;For keyCode to use look here:
+;https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/keyCode
+(defn make-keydown [channel]
   (fn [e]
-    (if (contains? @dispatched e)
-      (swap! dispatched disj e)
-      (stop-event e #(put! channel [event-type e])))))
-
-(defn capture [event-type channel]
-  (.addEventListener
-    js/window
-    (name event-type)
-    (event-handler event-type channel)
-    true))
-
-(defn dispatch [element e]
-  (swap! dispatched conj e)
-  (.dispatchEvent element e))
+    (let [command (key-command e)]
+      (when command
+        (stop-event e)
+        (put! channel [command nil])))))

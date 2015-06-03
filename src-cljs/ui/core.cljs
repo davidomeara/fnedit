@@ -24,6 +24,12 @@
 
     (coordination/files state channel)
 
+    (.addEventListener
+      js/window
+      "keydown"
+      (events/make-keydown channel)
+      true)
+
     (reagent/render
       [:div
        {:style {:position "fixed"
