@@ -125,7 +125,7 @@
          (let [cm (js/CodeMirror.
                     (reagent/dom-node this)
                     (clj->js {:value (:text @opened)
-                              :tabindex 20
+                              :tabindex -1
                               :lineNumbers true
                               :styleActiveLine true
                               :lineWrapping false
