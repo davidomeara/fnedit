@@ -1,8 +1,7 @@
 (ns ui.events
   (:require-macros [cljs.core.async.macros :refer [go go-loop]])
   (:require [cljs.core.async :refer [chan put! <!]]
-            [ui.debug :as debug]
-            [ui.utils :as utils]))
+            [ui.debug :as debug]))
 
 (defn stop-event
   ([e]
@@ -13,16 +12,13 @@
    (f e)
    nil))
 
-(def captured (atom #{}))
-
-(defn captured? [e]
-  (contains? (swap! captured utils/toggle e) e))
+(def dispatched (atom #{}))
 
 (defn- event-handler [event-type channel]
   (fn [e]
-    (stop-event e)
-    (when (captured? e)
-      (put! channel [event-type e]))))
+    (if (contains? @dispatched e)
+      (swap! dispatched disj e)
+      (stop-event e #(put! channel [event-type e])))))
 
 (defn capture [event-type channel]
   (.addEventListener
@@ -32,5 +28,5 @@
     true))
 
 (defn dispatch [element e]
-  (debug/dir (.fromCharCode js/String (.-which e)))
+  (swap! dispatched conj e)
   (.dispatchEvent element e))

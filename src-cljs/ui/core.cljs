@@ -1,5 +1,5 @@
 (ns ui.core
-  (:require [cljs.core.async :refer [chan]]
+  (:require [cljs.core.async :refer [chan put!]]
             [reagent.core :as reagent]
             [ui.clr :as clr]
             [ui.events :as events]
@@ -22,11 +22,13 @@
 
   (let [channel (chan)]
 
-    (coordination/files state channel)
+    (events/capture :keydown channel)
+    (events/capture :keypress channel)
+    (events/capture :keyup channel)
+    (.addEventListener js/window "keydown" #(println "hmm"))
 
-    ;(events/capture :keydown channel)
-    ;keypress
-    ;keyup
+    (coordination/files state channel)
+    (put! channel [:focus :editor])
 
     (reagent/render
       [:div
@@ -61,6 +63,7 @@
           (reagent/cursor state [:opened-file])
           channel]
          [editor
+          (reagent/cursor state [:focused])
           (reagent/cursor state [:opened-file])
           channel]]
         [:div.font.unselectable
