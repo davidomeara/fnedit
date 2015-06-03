@@ -86,11 +86,7 @@
           (count-inserted c)
           (-> doc (.indexFromPos (.-to c)))]]))))
 
-(defn- focus [focused cm]
-  (when (= focused :editor)
-    (.focus cm)))
-
-(defn make-editor [focused opened channel]
+(defn make-editor [opened channel]
   (let [cached-results (atom nil)
         before-change (make-on-before-change channel)
         change #(put! channel [:change (-> %1 .-doc .getValue)])
@@ -116,21 +112,14 @@
                      :padding "4px"
                      :color "white"
                      :background-color "#2182fb"}} (:name @opened)]]
-          [:div {:style {:display "none"}}
-           (str (:results @opened) @focused)]])
+          [:div {:style {:display "none"}} (:results @opened)]])
        :component-will-update
        (fn [this]
-         (println "component-will-update")
          (let [cm (get-cm this)
                results (:results @opened)]
            (when (not= results @cached-results)
              (evaluate-script-results cm results)
              (reset! cached-results results))))
-       :componenet-did-update
-       (fn [this]
-         (println "componenet-did-update")
-         (let [cm (get-cm this)]
-           (focus @focused cm)))
        :component-did-mount
        (fn [this]
          (let [cm (js/CodeMirror.
@@ -150,7 +139,6 @@
                                           :Shift-Ctrl-Enter #(put! channel [:evaluate-script nil])}
                               :mode "clojure",
                               :theme "default"}))]
-           (focus @focused cm)
            (.on cm "beforeChange" before-change)
            (.on cm "change" change)
            (.on cm "cursorActivity" cursor-activity)))
@@ -161,10 +149,10 @@
            (.off cm "change" change)
            (.off cm "cursorActivity" cursor-activity)))})))
 
-(defn editor [focused opened channel]
+(defn editor [opened channel]
   [:div {:style {:flex-grow 1
                  :position "relative"}}
    (when @opened
      (let [coll [@opened]]
        (for [x coll]
-         ^{:key (:id x)} [make-editor focused opened channel])))])
+         ^{:key (:id x)} [make-editor opened channel])))])

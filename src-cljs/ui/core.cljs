@@ -22,13 +22,7 @@
 
   (let [channel (chan)]
 
-    (events/capture :keydown channel)
-    (events/capture :keypress channel)
-    (events/capture :keyup channel)
-    (.addEventListener js/window "keydown" #(println "hmm"))
-
     (coordination/files state channel)
-    (put! channel [:focus :editor])
 
     (reagent/render
       [:div
@@ -63,7 +57,6 @@
           (reagent/cursor state [:opened-file])
           channel]
          [editor
-          (reagent/cursor state [:focused])
           (reagent/cursor state [:opened-file])
           channel]]
         [:div.font.unselectable

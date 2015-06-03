@@ -187,7 +187,7 @@
 (defn next-opened-id [state-cur]
   (:opened-id-count (swap! state-cur update-in [:opened-id-count] inc)))
 
-(defn new-file-dialog [state-cur channel]
+(defn new-file [state-cur channel]
   (go
     (when (<! (close-file? state-cur channel))
       (swap! state-cur assoc :opened-file {:id (next-opened-id state-cur)
@@ -262,7 +262,7 @@
           :open-root-directory (<! (open-folder-browser-dialog state-cur channel))
           :toggle-open-directory (<! (toggle-open-directory state-cur channel arg))
           :open-file (<! (open-file state-cur channel arg))
-          :new (<! (new-file-dialog state-cur channel))
+          :new (<! (new-file state-cur channel))
           :delete (<! (delete-file-dialog state-cur channel))
           :save (<! (save state-cur channel))
           :reload-file (<! (reload-file state-cur channel))
@@ -272,8 +272,4 @@
           :before-change (swap! state-cur data/shift-results arg)
           :change (swap! state-cur data/update-text arg)
           :cursor-selection (swap! state-cur data/update-cursor-selection arg)
-          :focus (swap! state-cur assoc :focused arg)
-          :keydown (events/dispatch js/window arg)
-          :keypress (events/dispatch js/window arg)
-          :keyup (events/dispatch js/window arg)
           :default)))))
