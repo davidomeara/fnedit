@@ -98,6 +98,10 @@
              (evaluate-script-results cm results)
              (reset! cached-results results))
            (.refresh cm)))
+       :component-did-update
+       (fn [this]
+         (let [cm (get-cm this)]
+           (.focus cm)))
        :component-did-mount
        (fn [this]
          (let [cm (js/CodeMirror.
@@ -114,7 +118,8 @@
                               :theme "default"}))]
            (.on cm "beforeChange" before-change)
            (.on cm "change" change)
-           (.on cm "cursorActivity" cursor-activity)))
+           (.on cm "cursorActivity" cursor-activity)
+           (.focus cm)))
        :component-did-unmount
        (fn [this]
          (let [cm (get-cm this)]
