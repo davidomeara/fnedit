@@ -40,21 +40,12 @@
       .-handle
       .-widgets)))
 
-(defn reset-scroll [cm]
-  (let [cursor (-> cm .-doc .getCursor)
-        coords (.charCoords cm cursor "local")
-        height (widgets-height cm cursor)]
-    (set! (.-bottom coords) (+ (.-bottom coords) height))
-    (.scrollIntoView cm coords 2)))
-
 (defn evaluate-script-results [cm results]
   (.operation cm
     (fn []
       (clear-line-widgets cm)
       (doseq [[[_ to] v] (sort-by #(first (first %)) results)]
-        (add-line-widget cm to v))
-      (.refresh cm)))
-  #_(reset-scroll cm))
+        (add-line-widget cm to v)))))
 
 (defn get-cm [this]
   (-> this reagent/dom-node .-lastChild .-CodeMirror))
@@ -95,23 +86,9 @@
     (reagent/create-class
       {:render
        (fn []
-         [:div {:style {:flex-grow 1
-                        :position "absolute"
+         [:div {:style {:position "absolute"
                         :width "100%"
-                        :height "100%"
-                        :display "flex"
-                        :flex-direction "column"}}
-          [:div.unselectable
-           {:on-context-menu #(events/stop-event %)
-            :style {:display "flex"
-                    :flex-direction "row"
-                    :border-bottom "1px solid #b6b6b7"
-                    :background-color "#f5f2f1"}}
-           [:div.font.unselectable
-            {:style {:flex-grow 0
-                     :padding "4px"
-                     :color "white"
-                     :background-color "#2182fb"}} (:name @opened)]]
+                        :height "100%"}}
           [:div {:style {:display "none"}} (:results @opened)]])
        :component-will-update
        (fn [this]
@@ -119,7 +96,8 @@
                results (:results @opened)]
            (when (not= results @cached-results)
              (evaluate-script-results cm results)
-             (reset! cached-results results))))
+             (reset! cached-results results))
+           (.refresh cm)))
        :component-did-mount
        (fn [this]
          (let [cm (js/CodeMirror.
@@ -144,10 +122,32 @@
            (.off cm "change" change)
            (.off cm "cursorActivity" cursor-activity)))})))
 
+(defn make-fake-tab [opened channel]
+  [:div
+   {:style {:display "flex"
+            :flex-grow 1
+            :flex-direction "column"}}
+   [:div.unselectable
+    {:on-context-menu #(events/stop-event %)
+     :style {:display "flex"
+             :flex-direction "row"
+             :border-bottom "1px solid #b6b6b7"
+             :background-color "#f5f2f1"}}
+    [:div.font.unselectable
+     {:style {:flex-grow 0
+              :padding "4px"
+              :color "white"
+              :background-color "#2182fb"}} (:name @opened)]]
+   [:div
+    {:style {:display "flex"
+             :flex-grow 1
+             :position "relative"}}
+    [make-editor opened channel]]])
+
 (defn editor [opened channel]
-  [:div {:style {:flex-grow 1
-                 :position "relative"}}
+  [:div {:style {:display "flex"
+                 :flex-grow 1}}
    (when @opened
      (let [coll [@opened]]
        (for [x coll]
-         ^{:key (:id x)} [make-editor opened channel])))])
+         ^{:key (:id x)} [make-fake-tab opened channel])))])
