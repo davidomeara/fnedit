@@ -37,7 +37,7 @@
 
 (defn on-init [browser debug?]
   (gen-delegate Action []
-    (.RegisterJsObject browser "clr" (->Wrapper browser debug?))
+    (.RegisterJsObject browser "clr" (->Wrapper browser debug?) true)
     (when debug?
       (.ShowDevTools browser))))
 
@@ -63,13 +63,19 @@
     (.set_Dock DockStyle/Fill)
     (.add_IsBrowserInitializedChanged (init-delegate debug?))))
 
+(defn focus-handler [browser]
+  (gen-delegate
+   |System.EventHandler| [sender e]
+   (.SetFocus browser true)))
+
 (defn form [folder? browser]
   (doto (Form.)
     (.set_Icon (Icon. (Path/GetFullPath (str (exe-dir) (if folder? "../cljs/" "") "fn.ico"))))
     (.set_StartPosition FormStartPosition/CenterScreen)
     (.set_MinimumSize (Size. 600 400))
     (.set_Size (Size. 800 600))
-    (#(.Add (.get_Controls %) browser))))
+    (#(.Add (.get_Controls %) browser))
+    (.add_Activated (focus-handler browser))))
 
 (defn sta-thread [f]
   (let [^ThreadStart thread-start (gen-delegate ThreadStart [] (f))]
@@ -78,13 +84,21 @@
       .Start
       .Join)))
 
+;https://code.google.com/p/chromium/issues/detail?id=372596
+(defn cef-settings []
+  (let [settings (CefSettings.)]
+    (-> settings
+        .get_CefCommandLineArgs
+        (.Add "disable-gpu" "1"))
+    settings))
+
 (defn -main [& args]
   (sta-thread
    (fn []
+     (Cef/Initialize (cef-settings))
      (let [debug? (boolean (some #{"-d"} args))
            folder? (boolean (some #{"-f"} args))
            browser (browser debug? folder?)]
-       (Cef/Initialize)
        (.ShowDialog (form folder? browser))
        (.Dispose browser)
        (Cef/Shutdown)

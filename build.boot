@@ -41,9 +41,9 @@
 (deftask clr-deps []
   (comp
     (nuget :package "Clojure" :version "1.6.0.1")
-    (nuget :package "cef.redist.x64" :version "3.2062.1898")
-    (nuget :package "CefSharp.Common" :version "37.0.1")
-    (nuget :package "CefSharp.WinForms" :version "37.0.1")))
+    (nuget :package "cef.redist.x64" :version "3.2171.2069")
+    (nuget :package "CefSharp.Common" :version "39.0.2")
+    (nuget :package "CefSharp.WinForms" :version "39.0.2")))
 
 (defn clr-include []
   (comp
@@ -51,9 +51,9 @@
     (sift :include #{#".*\.clj$"
                      #"^Clojure.*lib.net40.*dll$"
                      #"^Clojure.*tools.net40.*exe$"
-                     #"^cef.redist.x64.3.2062.1898.*CEF.*$"
-                     #"^CefSharp\.Common.37.0.1.*CefSharp.x64.*$"
-                     #"^CefSharp\.WinForms.37.0.1.*CefSharp.x64.*$"})
+                     #"^cef.redist.x64.3.2171.2069.*CEF.*$"
+                     #"^CefSharp\.Common.39.0.2.*CefSharp.x64.*$"
+                     #"^CefSharp\.WinForms.39.0.2.*CefSharp.x64.*$"})
 
     (sift :move {#"^Clojure.*lib.net40." ""
                  #"^Clojure.*tools.net40." ""
