@@ -89,10 +89,9 @@
        (fn [opened channel]
          [:div {:style {:position "absolute"
                         :width "100%"
-                        :height "100%"}}
-          [:div {:style {:display "none"}} (:results opened)]])
-       :component-did-update
-       (fn [this]
+                        :height "100%"}}])
+       :component-will-update
+       (fn [this [_ opened channel]]
          (let [cm (get-cm this)
                results (:results opened)]
            (when (not= results @cached-results)
