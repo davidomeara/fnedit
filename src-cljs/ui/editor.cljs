@@ -81,7 +81,8 @@
   (let [cached-results (atom nil)
         before-change (make-on-before-change channel)
         change #(put! channel [:change (-> %1 .-doc .getValue)])
-        cursor-activity #(put! channel [:cursor-selection (cursor-selection %)])]
+        cursor-activity #(put! channel [:cursor-selection (cursor-selection %)])
+        focus (fn [cm] (.focus cm) (cursor-activity cm))]
 
     (reagent/create-class
       {:render
@@ -101,7 +102,7 @@
        :component-did-update
        (fn [this]
          (let [cm (get-cm this)]
-           (.focus cm)))
+           (focus cm)))
        :component-did-mount
        (fn [this]
          (let [cm (js/CodeMirror.
@@ -119,7 +120,7 @@
            (.on cm "beforeChange" before-change)
            (.on cm "change" change)
            (.on cm "cursorActivity" cursor-activity)
-           (.focus cm)))
+           (focus cm)))
        :component-did-unmount
        (fn [this]
          (let [cm (get-cm this)]
