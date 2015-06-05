@@ -73,11 +73,4 @@
     -1
     button-style
     opened
-    #(put! out [:evaluate-script nil])]
-
-   [button
-    [:span toolbar-style [:i.icon.ion-ios-download-outline icon-style] "AOT compile"]
-    -1
-    button-style
-    (delay true)
-    #(put! out [:aot-compile nil])]])
+    #(put! out [:evaluate-script nil])]])

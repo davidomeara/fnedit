@@ -50,17 +50,3 @@
    standard-button-style
    enabled-cursor
    on-click-fn])
-
-(defn input [tabindex style value-cursor on-change-fn on-enter-fn]
-  (reagent/create-class
-    {:component-did-mount #(-> (reagent/dom-node %) .-children (aget 0) .select)
-     :render (fn []
-               [:div.widget-behavior
-                {:style (merge standard-widget-style {:border "1px solid #b6b6b7"
-                                                      :background "white"} style)}
-                [:input {:tabIndex tabindex
-                         :on-change #(on-change-fn (reset! value-cursor (-> % .-target .-value)))
-                         :on-key-down (key-down on-enter-fn)
-                         :type "text"
-                         :value @value-cursor
-                         :style {:width "100%"}}]])}))
