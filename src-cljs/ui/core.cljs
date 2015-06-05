@@ -11,7 +11,56 @@
             [ui.modal-dialog :as modal-dialog]
             [ui.debug :as debug]))
 
-(def state (reagent/atom nil))
+(def state (reagent/atom {:splitter {:min-left-width 120
+                                     :left-width 120}}))
+
+(defn main-component [state channel debug]
+  [:div
+   {:style {:position "fixed"
+            :top 0
+            :right 0
+            :bottom 0
+            :left 0
+            :display "flex"
+            :flex-direction "column"}}
+   [:div
+    {:style {:display "flex"
+             :flex-direction "column"
+             :flex-grow 1}}
+    [toolbar (reagent/cursor state [:opened-file]) channel]
+    [modal-dialog/yes-no (reagent/cursor state [:delete-file]) channel]
+    [modal-dialog/ok (reagent/cursor state [:ok-dialog]) channel]
+    [modal-dialog/ok (reagent/cursor state [:open-root-directory]) channel]
+    [modal-dialog/ok (reagent/cursor state [:open-file]) channel]
+    [modal-dialog/ok (reagent/cursor state [:save-file]) channel]
+    [modal-dialog/yes-no-cancel (reagent/cursor state [:close-file]) channel]
+    [modal-dialog/yes-no (reagent/cursor state [:reloaded-file]) channel]
+    [(fn [state channel left right]
+       [hsplitter (:splitter @state) channel left right])
+     state
+     channel
+     [tree-view
+      (reagent/cursor state [:root])
+      (reagent/cursor state [:open-directories])
+      (reagent/cursor state [:opened-file])
+      channel]
+     [editor
+      (reagent/cursor state [:opened-file])
+      channel]]
+    [:div.font.unselectable
+     {:style {:background-color "#f5f2f1"
+              :padding "2px"
+              :height "1.2em"
+              :border-top "solid 1px #b6b6b7"}}
+     (:status @state)]]
+   (when debug
+     [(fn []
+        [:pre
+         {:style {:height "600px"
+                  :margin 0
+                  :overflow "auto"
+                  :border-top "solid 1px #b6b6b7"}}
+         (debug/stringify @state)])])])
 
 (defn main [debug]
   (when debug
@@ -32,51 +81,7 @@
       true)
 
     (reagent/render
-      [:div
-       {:style {:position "fixed"
-                :top 0
-                :right 0
-                :bottom 0
-                :left 0
-                :display "flex"
-                :flex-direction "column"}}
-       [:div
-        {:style {:display "flex"
-                 :flex-direction "column"
-                 :flex-grow 1}}
-        [toolbar
-         (reagent/cursor state [:opened-file])
-         channel]
-        [modal-dialog/yes-no (reagent/cursor state [:delete-file]) channel]
-        [modal-dialog/ok (reagent/cursor state [:ok-dialog]) channel]
-        [modal-dialog/ok (reagent/cursor state [:open-root-directory]) channel]
-        [modal-dialog/ok (reagent/cursor state [:open-file]) channel]
-        [modal-dialog/ok (reagent/cursor state [:save-file]) channel]
-        [modal-dialog/yes-no-cancel (reagent/cursor state [:close-file]) channel]
-        [modal-dialog/yes-no (reagent/cursor state [:reloaded-file]) channel]
-        [hsplitter
-         [tree-view
-          (reagent/cursor state [:root])
-          (reagent/cursor state [:open-directories])
-          (reagent/cursor state [:opened-file])
-          channel]
-         [editor
-          (reagent/cursor state [:opened-file])
-          channel]]
-        [:div.font.unselectable
-         {:style {:background-color "#f5f2f1"
-                  :padding "2px"
-                  :height "1.2em"
-                  :border-top "solid 1px #b6b6b7"}}
-         (:status @state)]]
-       (when debug
-         [(fn []
-            [:pre
-             {:style {:height "600px"
-                      :margin 0
-                      :overflow "auto"
-                      :border-top "solid 1px #b6b6b7"}}
-             (debug/stringify @state)])])]
+      (main-component state channel debug)
       (.getElementById js/document "root"))))
 
 (main (clr/sync-eval (str '(core.clojure-clr-wrapper/is-debug))))

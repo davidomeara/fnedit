@@ -5,46 +5,24 @@
             [ui.events :as events]
             [ui.debug :as debug]))
 
-(defn set-left-width! [state-cur [client-x]]
-  (let [actual-client-x  (- client-x 4)
-        min-left-width (get-in @state-cur [:splitter :min-left-width ])
-        width (if (< actual-client-x min-left-width)
-                min-left-width
-                client-x)]
-    (swap! state-cur assoc-in [:splitter :left-width] width)
-    :drag))
-
 (defn client-x-width [e]
   [(.-clientX e) (-> e .-currentTarget .-clientWidth)])
 
-(defn hsplitter [left right]
-  (let [c (chan)
-        state-cur (reagent/atom {:splitter {:min-left-width 120
-                                            :left-width 120}})
-        mouse-down (fn [e] (events/stop-event e #(put! c [:down nil])))
-        mouse-move (fn [e] (put! c [:move (client-x-width e)]) nil)
-        mouse-up (fn [e] (put! c [:up nil]) nil)]
-
-    (go-loop
-     [drag-state nil]
-     (recur
-      (let [[action arg] (<! c)]
-        (case [drag-state action]
-          [nil :down] :drag
-          [:drag :move] (set-left-width! state-cur arg)
-          nil))))
-
+(defn hsplitter [_ channel _ _]
+  (let [mouse-down (fn [e] (events/stop-event e #(put! channel [:splitter-down nil])))
+        mouse-move (fn [e] (put! channel [:move (client-x-width e)]) nil)
+        mouse-up (fn [e] (put! channel [:up nil]) nil)]
     (reagent/create-class
-     {:render
-      (fn []
+     {:reagent-render
+      (fn [state _ left right]
         [:div
          {:on-mouse-move mouse-move
           :style {:flex-grow 1
                   :display "flex"
                   :flex-direction "row"}}
          [:div
-          {:style {:width (str (get-in @state-cur [:splitter :left-width]) "px")
-                   :min-width (str (get-in @state-cur [:splitter :min-left-width ]) "px")
+          {:style {:width (str (:left-width state) "px")
+                   :min-width (str (:min-left-width state) "px")
                    :flex-grow 0
                    :flex-shrink 0
                    :display "flex"

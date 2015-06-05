@@ -238,6 +238,23 @@
         (>! c v)))
     c))
 
+(defn set-left-width! [state-cur client-x]
+  (let [actual-client-x (- client-x 4)
+        min-left-width (get-in @state-cur [:splitter :min-left-width])
+        width (if (< actual-client-x min-left-width)
+                min-left-width
+                client-x)]
+    (swap! state-cur assoc-in [:splitter :left-width] width)
+    :drag))
+
+(defn splitter-down [state-cur channel]
+  (go-loop
+    [drag-state :drag]
+    (let [[action [client-x]] (<! channel)]
+      (case [drag-state action]
+        [:drag :move] (recur (set-left-width! state-cur client-x))
+        nil))))
+
 (defn files [state-cur channel]
   (go
     (while true
@@ -255,5 +272,5 @@
           :before-change (swap! state-cur data/shift-results arg)
           :change (swap! state-cur data/update-text arg)
           :cursor-selection (swap! state-cur data/update-cursor-selection arg)
-          ;:splitter-down
+          :splitter-down (<! (splitter-down state-cur channel))
           :default)))))
