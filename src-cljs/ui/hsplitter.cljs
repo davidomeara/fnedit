@@ -10,8 +10,7 @@
         width (if (< actual-client-x min-left-width)
                 min-left-width
                 client-x)]
-    (swap! state #(-> %
-                      (assoc :left-width width)))
+    (reset! state width)
     :drag))
 
 (defn client-x-width [e]
@@ -19,7 +18,7 @@
 
 (defn hsplitter [initial-left-width min-left-width left right]
   (let [c (chan)
-        state (reagent/atom {:left-width initial-left-width})
+        state (reagent/atom initial-left-width)
         mouse-down (fn [e] (events/stop-event e #(put! c [:down nil])))
         mouse-move (fn [e] (put! c [:move (client-x-width e)]) nil)
         mouse-up (fn [e] (put! c [:up nil]) nil)]
@@ -42,7 +41,7 @@
                   :display "flex"
                   :flex-direction "row"}}
          [:div
-          {:style {:width (str (:left-width @state) "px")
+          {:style {:width (str @state "px")
                    :min-width (str min-left-width "px")
                    :flex-grow 0
                    :flex-shrink 0
