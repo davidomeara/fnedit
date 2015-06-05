@@ -73,7 +73,7 @@
           right]])
       :component-did-mount
       (fn [this]
-        (set-left-width! state [initial-left-width (-> this .getDOMNode .-clientWidth)] min-left-width)
+        (set-left-width! state [initial-left-width (-> reagent/dom-node .-clientWidth)] min-left-width)
         (-> js/document .-defaultView (.addEventListener "mouseup" mouse-up false)))
       :component-did-unmount
       (fn []
