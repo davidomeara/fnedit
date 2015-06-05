@@ -53,8 +53,7 @@
 
 (defn tree-view [root open-directories opened-file channel]
   [:div.unselectable
-   {:on-context-menu #(events/stop-event %)
-    :style {:flex-grow 1
+   {:style {:flex-grow 1
             :display "flex"
             :flex-direction "column"
             :background-color "#f5f2f1"}}

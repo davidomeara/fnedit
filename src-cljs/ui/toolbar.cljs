@@ -23,8 +23,7 @@
 
 (defn toolbar [opened out]
   [:div.unselectable
-   {:on-context-menu #(events/stop-event %)
-    :on-focus #(-> % .-nativeEvent .-target .blur)
+   {:on-focus #(-> % .-nativeEvent .-target .blur)
     :style {:flex-grow 0
             :flex-shrink 0
             :display "flex"

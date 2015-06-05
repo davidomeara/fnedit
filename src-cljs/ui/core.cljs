@@ -17,8 +17,9 @@
   (when debug
     (enable-console-print!))
 
-  (.addEventListener js/window "dragover" events/stop-event)
-  (.addEventListener js/window "drop" events/stop-event)
+  (.addEventListener js/window "contextmenu" events/stop-event true)
+  (.addEventListener js/window "dragover" events/stop-event true)
+  (.addEventListener js/window "drop" events/stop-event true)
 
   (let [channel (chan)]
 
@@ -66,8 +67,7 @@
           (reagent/cursor state [:opened-file])
           channel]]
         [:div.font.unselectable
-         {:on-context-menu #(events/stop-event %)
-          :style {:background-color "#f5f2f1"
+         {:style {:background-color "#f5f2f1"
                   :padding "2px"
                   :height "1.2em"
                   :border-top "solid 1px #b6b6b7"}}

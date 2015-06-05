@@ -51,7 +51,6 @@
           left]
          [:div
           {:on-mouse-down mouse-down
-           :on-context-menu #(events/stop-event %)
            :style {:cursor "ew-resize"
                    :margin "0 -4px 0 -4px"
                    :width "9px"

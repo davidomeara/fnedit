@@ -133,8 +133,7 @@
             :flex-grow 1
             :flex-direction "column"}}
    [:div.unselectable
-    {:on-context-menu #(events/stop-event %)
-     :style {:display "flex"
+    {:style {:display "flex"
              :flex-direction "row"
              :border-bottom "1px solid #b6b6b7"
              :background-color "#f5f2f1"}}
