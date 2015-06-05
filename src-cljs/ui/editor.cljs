@@ -85,29 +85,26 @@
         focus (fn [cm] (.focus cm) (cursor-activity cm))]
 
     (reagent/create-class
-      {:render
-       (fn []
+      {:reagent-render
+       (fn [opened channel]
          [:div {:style {:position "absolute"
                         :width "100%"
                         :height "100%"}}
-          [:div {:style {:display "none"}} (:results @opened)]])
-       :component-will-update
+          [:div {:style {:display "none"}} (:results opened)]])
+       :component-did-update
        (fn [this]
          (let [cm (get-cm this)
-               results (:results @opened)]
+               results (:results opened)]
            (when (not= results @cached-results)
              (evaluate-script-results cm results)
              (reset! cached-results results))
-           (.refresh cm)))
-       :component-did-update
-       (fn [this]
-         (let [cm (get-cm this)]
+           (.refresh cm)
            (focus cm)))
        :component-did-mount
        (fn [this]
          (let [cm (js/CodeMirror.
                     (reagent/dom-node this)
-                    (clj->js {:value (:text @opened)
+                    (clj->js {:value (:text opened)
                               :tabindex -1
                               :lineNumbers true
                               :styleActiveLine true
@@ -142,17 +139,18 @@
      {:style {:flex-grow 0
               :padding "4px"
               :color "white"
-              :background-color "#2182fb"}} (:name @opened)]]
+              :background-color "#2182fb"}} (:name opened)]]
    [:div
     {:style {:display "flex"
              :flex-grow 1
              :position "relative"}}
     [make-editor opened channel]]])
 
-(defn editor [opened channel]
+(defn editor [opened-file channel]
   [:div {:style {:display "flex"
                  :flex-grow 1}}
-   (when @opened
-     (let [coll [@opened]]
-       (for [x coll]
-         ^{:key (:id x)} [make-fake-tab opened channel])))])
+   (let [opened @opened-file]
+     (when opened
+       (let [coll [opened]]
+         (for [x coll]
+           ^{:key (:id x)} [make-fake-tab opened channel]))))])
