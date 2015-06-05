@@ -78,22 +78,6 @@
     state
     #(if-let [x (:cursor-selection %)] x [-1 -1])))
 
-(defn aot-compile [state-cur channel]
-  (go
-    (as-> @state-cur state
-      (assoc state :aot-compile {})
-      (reset! state-cur state)
-      (loop [state state]
-        (let [[cmd arg] (<! channel)]
-          (case cmd
-            :compile (recur state)
-            :close (dissoc state :aot-compile)
-            (recur state))))
-      (reset! state-cur state))
-    #_(println (<! (clr/async-eval 'core.cross-app-domain-compiler/aot-compile
-                   {:path (get-in state [:folder :path])
-                    :top-ns 'new})))))
-
 (defn cannot-save-file
   "Displays exception, returns false."
   [state-cur message channel]
@@ -268,7 +252,6 @@
           :reload-file (<! (reload-file state-cur channel))
           :evaluate-form (swap! state-cur evaluate-form)
           :evaluate-script (swap! state-cur evaluate-script)
-          :aot-compile (<! (aot-compile state-cur channel))
           :before-change (swap! state-cur data/shift-results arg)
           :change (swap! state-cur data/update-text arg)
           :cursor-selection (swap! state-cur data/update-cursor-selection arg)
