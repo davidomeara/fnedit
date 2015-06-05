@@ -5,20 +5,22 @@
             [ui.events :as events]
             [ui.debug :as debug]))
 
-(defn set-left-width! [state [client-x] min-left-width]
+(defn set-left-width! [state-cur [client-x]]
   (let [actual-client-x  (- client-x 4)
+        min-left-width (get-in @state-cur [:splitter :min-left-width ])
         width (if (< actual-client-x min-left-width)
                 min-left-width
                 client-x)]
-    (reset! state width)
+    (swap! state-cur assoc-in [:splitter :left-width] width)
     :drag))
 
 (defn client-x-width [e]
   [(.-clientX e) (-> e .-currentTarget .-clientWidth)])
 
-(defn hsplitter [initial-left-width min-left-width left right]
+(defn hsplitter [left right]
   (let [c (chan)
-        state (reagent/atom initial-left-width)
+        state-cur (reagent/atom {:splitter {:min-left-width 120
+                                            :left-width 120}})
         mouse-down (fn [e] (events/stop-event e #(put! c [:down nil])))
         mouse-move (fn [e] (put! c [:move (client-x-width e)]) nil)
         mouse-up (fn [e] (put! c [:up nil]) nil)]
@@ -29,7 +31,7 @@
       (let [[action arg] (<! c)]
         (case [drag-state action]
           [nil :down] :drag
-          [:drag :move] (set-left-width! state arg min-left-width)
+          [:drag :move] (set-left-width! state-cur arg)
           nil))))
 
     (reagent/create-class
@@ -41,8 +43,8 @@
                   :display "flex"
                   :flex-direction "row"}}
          [:div
-          {:style {:width (str @state "px")
-                   :min-width (str min-left-width "px")
+          {:style {:width (str (get-in @state-cur [:splitter :left-width]) "px")
+                   :min-width (str (get-in @state-cur [:splitter :min-left-width ]) "px")
                    :flex-grow 0
                    :flex-shrink 0
                    :display "flex"
@@ -72,7 +74,6 @@
           right]])
       :component-did-mount
       (fn [this]
-        (set-left-width! state [initial-left-width (-> reagent/dom-node .-clientWidth)] min-left-width)
         (-> js/document .-defaultView (.addEventListener "mouseup" mouse-up false)))
       :component-did-unmount
       (fn []

@@ -55,8 +55,6 @@
         [modal-dialog/yes-no-cancel (reagent/cursor state [:close-file]) channel]
         [modal-dialog/yes-no (reagent/cursor state [:reloaded-file]) channel]
         [hsplitter
-         120
-         120
          [tree-view
           (reagent/cursor state [:root])
           (reagent/cursor state [:open-directories])

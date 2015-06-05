@@ -255,4 +255,5 @@
           :before-change (swap! state-cur data/shift-results arg)
           :change (swap! state-cur data/update-text arg)
           :cursor-selection (swap! state-cur data/update-cursor-selection arg)
+          ;:splitter-down
           :default)))))
