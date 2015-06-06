@@ -19,7 +19,7 @@
 
 (defn file-div [depth {:keys [path name]} opened-file channel]
   [:div.font.unselectable
-   {:style (file-div-style (= path (:path @opened-file)))}
+   {:style (file-div-style (= path (:path opened-file)))}
    [padded-div depth name
     {:on-click #(events/stop-event % (fn [] (put! channel [:open-file path])))}]])
 
@@ -36,7 +36,7 @@
      (let [icon-style {:style {:display "inline-block"
                                :width "14px"
                                :height "14px"}}]
-       (if (contains? @open-directories path)
+       (if (contains? open-directories path)
          [:i.ion-arrow-down-b icon-style]
          [:i.ion-arrow-right-b icon-style]))
      [:span {:style {:padding-left "4px"}} name]]
@@ -64,6 +64,6 @@
              :background-color "white"}}
     [:div {:style {:display "inline-block"
                    :min-width "100%"}}
-     (let [roots (sort-by #(:name (key %)) @root)]
+     (let [roots (sort-by #(:name (key %)) root)]
        (for [root roots]
          ^{:key (key root)} [dir-div 1 root open-directories opened-file channel]))]]])

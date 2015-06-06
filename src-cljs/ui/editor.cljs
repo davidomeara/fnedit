@@ -77,7 +77,7 @@
           (count-inserted c)
           (-> doc (.indexFromPos (.-to c)))]]))))
 
-(defn make-editor [opened channel]
+(defn make-editor [opened-file channel]
   (let [cached-results (atom nil)
         before-change (make-on-before-change channel)
         change #(put! channel [:change (-> %1 .-doc .getValue)])
@@ -86,7 +86,7 @@
 
     (reagent/create-class
       {:reagent-render
-       (fn [opened channel]
+       (fn [opened-file channel]
          [:div {:style {:position "absolute"
                         :width "100%"
                         :height "100%"}}])
@@ -103,7 +103,7 @@
        (fn [this]
          (let [cm (js/CodeMirror.
                     (reagent/dom-node this)
-                    (clj->js {:value (:text opened)
+                    (clj->js {:value (:text opened-file)
                               :tabindex -1
                               :lineNumbers true
                               :styleActiveLine true
@@ -124,7 +124,7 @@
            (.off cm "change" change)
            (.off cm "cursorActivity" cursor-activity)))})))
 
-(defn make-fake-tab [opened channel]
+(defn make-fake-tab [opened-file channel]
   [:div
    {:style {:display "flex"
             :flex-grow 1
@@ -138,18 +138,17 @@
      {:style {:flex-grow 0
               :padding "4px"
               :color "white"
-              :background-color "#2182fb"}} (:name opened)]]
+              :background-color "#2182fb"}} (:name opened-file)]]
    [:div
     {:style {:display "flex"
              :flex-grow 1
              :position "relative"}}
-    [make-editor opened channel]]])
+    [make-editor opened-file channel]]])
 
 (defn editor [opened-file channel]
   [:div {:style {:display "flex"
                  :flex-grow 1}}
-   (let [opened @opened-file]
-     (when opened
-       (let [coll [opened]]
-         (for [x coll]
-           ^{:key (:id x)} [make-fake-tab opened channel]))))])
+   (when opened-file
+     (let [coll [opened-file]]
+       (for [x coll]
+         ^{:key (:id x)} [make-fake-tab opened-file channel])))])

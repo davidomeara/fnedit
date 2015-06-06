@@ -11,8 +11,9 @@
             [ui.modal-dialog :as modal-dialog]
             [ui.debug :as debug]))
 
-(def state-cur (reagent/atom {:splitter {:min-left-width 120
-                                         :left-width 120}}))
+(def initial-state
+  {:splitter {:min-left-width 120
+              :left-width 120}})
 
 (defn main-component [state channel debug]
   [:div
@@ -34,23 +35,15 @@
     [modal-dialog/ok (:save-file state) channel]
     [modal-dialog/yes-no-cancel (:close-file state) channel]
     [modal-dialog/yes-no (:reloaded-file state) channel]
-    [hsplitter
-     (:splitter state)
-     channel
-     [tree-view
-      (reagent/cursor state-cur [:root])
-      (reagent/cursor state-cur [:open-directories])
-      (reagent/cursor state-cur [:opened-file])
-      channel]
-     [editor
-      (reagent/cursor state-cur [:opened-file])
-      channel]]
+    [hsplitter (:splitter state) channel
+     [tree-view (:root state) (:open-directories state) (:opened-file state) channel]
+     [editor (:opened-file state) channel]]
     [:div.font.unselectable
      {:style {:background-color "#f5f2f1"
               :padding "2px"
               :height "1.2em"
               :border-top "solid 1px #b6b6b7"}}
-     (:status @state-cur)]]
+     (:status state)]]
    (when debug
      [(fn []
         [:pre
@@ -58,7 +51,7 @@
                   :margin 0
                   :overflow "auto"
                   :border-top "solid 1px #b6b6b7"}}
-         (debug/stringify @state-cur)])])])
+         (debug/stringify state)])])])
 
 (defn main [debug]
   (when debug
@@ -68,9 +61,10 @@
   (.addEventListener js/window "dragover" events/stop-event true)
   (.addEventListener js/window "drop" events/stop-event true)
 
-  (let [channel (chan)]
+  (let [state (reagent/atom initial-state)
+        channel (chan)]
 
-    (coordination/files state-cur channel)
+    (coordination/files state channel)
 
     (.addEventListener
       js/window
@@ -79,7 +73,7 @@
       true)
 
     (reagent/render
-      [(fn [s] [main-component @s channel debug]) state-cur]
+      [(fn [s] [main-component @s channel debug]) state]
       (.getElementById js/document "root"))))
 
 (main (clr/sync-eval (str '(core.clojure-clr-wrapper/is-debug))))
