@@ -23,8 +23,7 @@
 
 (defn toolbar [opened out]
   [:div.unselectable
-   {:on-focus #(-> % .-nativeEvent .-target .blur)
-    :style {:flex-grow 0
+   {:style {:flex-grow 0
             :flex-shrink 0
             :display "flex"
             :flex-direction "row"
@@ -66,11 +65,11 @@
     -1
     button-style
     (:cursor-selection opened)
-    #(put! out [:evaluate-form nil])]
+    #(put! out [:evaluate-form])]
 
    [button
     [:span toolbar-style [:i.icon.ion-ios-arrow-thin-down icon-style] "Eval file"]
     -1
     button-style
     opened
-    #(put! out [:evaluate-script nil])]])
+    #(put! out [:evaluate-script])]])

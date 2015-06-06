@@ -13,7 +13,7 @@
   (if enabled?
     [:a.unselectable.widget-behavior.widget-color.font
      {:tabIndex tabindex
-      :on-click #(events/stop-event % (fn [] (on-click-fn)))
+      :on-click (fn [] (on-click-fn) nil)
       :on-key-down (key-down on-click-fn)
       :style (merge style {:display "inline-block"
                            :cursor "pointer"})}
