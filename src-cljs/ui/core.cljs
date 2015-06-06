@@ -40,10 +40,12 @@
      [editor (:opened-file state) channel]]
     [:div.font.unselectable
      {:style {:background-color "#f5f2f1"
-              :padding "2px"
-              :height "1.2em"
-              :border-top "solid 1px #b6b6b7"}}
-     (:status state)]]
+              :padding "4px"
+              :line-height "1.2em"
+              :min-height "1.2em"
+              :border-top "solid 1px #b6b6b7"
+              :display "inline-block"}}
+     (first (:status state))]]
    (when debug
      [(fn []
         [:pre

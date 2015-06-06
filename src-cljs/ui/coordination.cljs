@@ -21,43 +21,43 @@
       (= (subs name (- n 4) n) ".clj")
       false)))
 
-(defn load-folder [state-cur root-path channel]
+(defn load-folder [state root-path channel]
   (go
     (swap!
-      state-cur
+      state
       assoc
       :open-directories
       (<! (clr/async-eval
             'core.fs/remove-deleted-directories
-            (:open-directories @state-cur))))
+            (:open-directories @state))))
     (swap!
-      state-cur
+      state
       assoc
       :root
       (<! (clr/async-eval
             'core.fs/root-directory
             root-path
-            (:open-directories @state-cur))))))
+            (:open-directories @state))))))
 
 (defn- assoc-clj-validation-warning [s]
   (assoc-in s [:new-file :validation]
     "The script must have the extension .clj"))
 
-(defn delete-file-dialog [state-cur channel]
+(defn delete-file-dialog [state channel]
   (go
-    (swap! state-cur assoc-in [:delete-file :caption]
+    (swap! state assoc-in [:delete-file :caption]
            "Are you sure you would like to delete this file?")
     (loop []
       (case (<! channel)
-        :yes (let [{:keys [exception]} (<! (clr/async-eval 'core.fs/delete (get-in @state-cur [:opened-file :path])))]
+        :yes (let [{:keys [exception]} (<! (clr/async-eval 'core.fs/delete (get-in @state [:opened-file :path])))]
                (if exception
-                 (do (swap! state-cur assoc-in [:delete-file :exception] exception)
+                 (do (swap! state assoc-in [:delete-file :exception] exception)
                      (recur))
-                 (swap! state-cur dissoc :opened-file)))
+                 (swap! state dissoc :opened-file)))
         :no nil
         (recur)))
-    (swap! state-cur dissoc :delete-file)
-    (<! (load-folder state-cur (root-path @state-cur) channel))))
+    (swap! state dissoc :delete-file)
+    (<! (load-folder state (root-path @state) channel))))
 
 (defn evaluate [state to-from-fn]
   (let [opened (:opened-file state)
@@ -80,155 +80,155 @@
 
 (defn cannot-save-file
   "Displays exception, returns false."
-  [state-cur message channel]
+  [state message channel]
   (go
-    (swap! state-cur update-in [:save-file] merge {:caption "Cannot save file"
+    (swap! state update-in [:save-file] merge {:caption "Cannot save file"
                                                    :exception message})
     (loop []
       (case (<! channel)
         :ok nil
         (recur)))
-    (swap! state-cur dissoc :save-file)
+    (swap! state dissoc :save-file)
     false))
 
 (declare save)
 
 (defn save-as
   "Returns true if success, false if failed or canceled."
-  [state-cur channel]
+  [state channel]
   (go
     (let [{:keys [status result]}
           (<! (clr/winforms-async-eval
                 'core.fs/save-as
-                (root-path @state-cur)
-                (if-let [n (get-in @state-cur [:opened-file :name])] n "new.clj")))]
+                (root-path @state)
+                (if-let [n (get-in @state [:opened-file :name])] n "new.clj")))]
       (case status
         :success (do
-                   (swap! state-cur update-in [:opened-file] merge result)
-                   (save state-cur channel))
+                   (swap! state update-in [:opened-file] merge result)
+                   (save state channel))
         :cancel false
-        :exception (<! (cannot-save-file state-cur result channel))
+        :exception (<! (cannot-save-file state result channel))
         false))))
 
 (defn save
   "Returns true if success, false if failed or canceled."
-  [state-cur channel]
+  [state channel]
   (go
-    (if (get-in @state-cur [:opened-file :path])
+    (if (get-in @state [:opened-file :path])
       (let [{:keys [status result]}
             (<! (clr/async-eval
                   'core.fs/save
-                  (get-in @state-cur [:opened-file :path])
-                  (get-in @state-cur [:opened-file :text])))]
+                  (get-in @state [:opened-file :path])
+                  (get-in @state [:opened-file :text])))]
         (case status
           :success (do
-                     (swap! state-cur update-in [:opened-file] merge (merge {:dirty? false} result))
-                     (<! (load-folder state-cur (root-path @state-cur) channel))
+                     (swap! state update-in [:opened-file] merge (merge {:dirty? false} result))
+                     (<! (load-folder state (root-path @state) channel))
                      true)
           :exception (do
-                       (<! (cannot-save-file state-cur result channel))
-                       (save-as state-cur channel))
+                       (<! (cannot-save-file state result channel))
+                       (save-as state channel))
           false))
-      (save-as state-cur channel))))
+      (save-as state channel))))
 
 (defn close-file?
   "Returns true if file was closed, false if not."
-  [state-cur channel]
+  [state channel]
   (go
     (if (or
-          (get-in @state-cur [:opened-file :dirty?])
-          (let [path (get-in @state-cur [:opened-file :path])]
+          (get-in @state [:opened-file :dirty?])
+          (let [path (get-in @state [:opened-file :path])]
             (when path (not (<! (clr/async-eval 'core.fs/exists path))))))
       (do
-        (swap! state-cur assoc-in [:close-file :caption] "Would you like to save this file before closing it?")
+        (swap! state assoc-in [:close-file :caption] "Would you like to save this file before closing it?")
         (let [result (loop []
                        (case (<! channel)
-                         :yes (if (<! (save state-cur channel))
+                         :yes (if (<! (save state channel))
                                 true
                                 (recur))
                          :no true
                          :cancel false
                          (recur)))]
-          (swap! state-cur dissoc :close-file)
+          (swap! state dissoc :close-file)
           result))
       true)))
 
-(defn open-folder-browser-dialog [state-cur channel]
+(defn open-folder-browser-dialog [state channel]
   (go
     (let [{:keys [path cancel exception]} (<! (clr/winforms-async-eval 'core.fs/folder-browser-dialog))]
       (if exception
         (do
-          (swap! state-cur assoc-in [:open-root-directory :caption] "Cannot open directory")
+          (swap! state assoc-in [:open-root-directory :caption] "Cannot open directory")
           (loop []
             (case (<! channel)
               :ok nil
               (recur)))
-          (swap! state-cur dissoc :open-root-directory))
+          (swap! state dissoc :open-root-directory))
         (when path
-          (swap! state-cur assoc :open-directories #{path})
-          (<! (load-folder state-cur path channel)))))))
+          (swap! state assoc :open-directories #{path})
+          (<! (load-folder state path channel)))))))
 
-(defn next-opened-id [state-cur]
-  (:opened-id-count (swap! state-cur update-in [:opened-id-count] inc)))
+(defn next-opened-id [state]
+  (:opened-id-count (swap! state update-in [:opened-id-count] inc)))
 
-(defn new-file [state-cur channel]
+(defn new-file [state channel]
   (go
-    (when (<! (close-file? state-cur channel))
-      (swap! state-cur assoc :opened-file {:id (next-opened-id state-cur)
+    (when (<! (close-file? state channel))
+      (swap! state assoc :opened-file {:id (next-opened-id state)
                                            :name "untitled"
                                            :text ""
                                            :dirty? true}))))
 
-(defn do-open-file [state-cur channel path]
+(defn do-open-file [state channel path]
   (go
     (let [{:keys [name text last-write-time exception]} (<! (clr/async-eval 'core.fs/read-all-text path))]
       (if exception
         (do
-          (swap! state-cur assoc-in [:open-file :caption] "Cannot open file")
+          (swap! state assoc-in [:open-file :caption] "Cannot open file")
           (loop []
             (case (<! channel)
               :ok nil
               (recur)))
-          (swap! state-cur dissoc :open-file))
+          (swap! state dissoc :open-file))
         (when (and path text)
-          (swap! state-cur assoc :opened-file {:id (next-opened-id state-cur)
+          (swap! state assoc :opened-file {:id (next-opened-id state)
                                                :path path
                                                :name name
                                                :last-write-time last-write-time
                                                :text text}))))
-    (<! (load-folder state-cur (root-path @state-cur) channel))))
+    (<! (load-folder state (root-path @state) channel))))
 
-(defn open-file [state-cur channel path]
+(defn open-file [state channel path]
   (go
-    (when (<! (close-file? state-cur channel))
-      (if (= (get-in @state-cur [:opened-file :path]) path)
-        (swap! state-cur dissoc :opened-file)
-        (<! (do-open-file state-cur channel path))))))
+    (when (<! (close-file? state channel))
+      (if (= (get-in @state [:opened-file :path]) path)
+        (swap! state dissoc :opened-file)
+        (<! (do-open-file state channel path))))))
 
-(defn reload-file [state-cur channel]
+(defn reload-file [state channel]
   (go
-    (let [reload-time (<! (clr/async-eval 'core.fs/last-write-time (get-in @state-cur [:opened-file :path])))
-          opened-time (get-in @state-cur [:opened-file :last-write-time])]
+    (let [reload-time (<! (clr/async-eval 'core.fs/last-write-time (get-in @state [:opened-file :path])))
+          opened-time (get-in @state [:opened-file :last-write-time])]
       (when opened-time
         (if reload-time
           (when (> (.getTime reload-time) (.getTime opened-time))
-            (swap! state-cur assoc-in [:reloaded-file :caption] "The file has been changed outside this editor.  Would you like to reload it?")
+            (swap! state assoc-in [:reloaded-file :caption] "The file has been changed outside this editor.  Would you like to reload it?")
             (loop []
               (case (<! channel)
-                :yes (let [path (get-in @state-cur [:opened-file :path])]
-                       (swap! state-cur dissoc :opened-file)
-                       (<! (do-open-file state-cur channel path)))
-                :no (swap! state-cur assoc-in [:opened-file :dirty?] true)
+                :yes (let [path (get-in @state [:opened-file :path])]
+                       (swap! state dissoc :opened-file)
+                       (<! (do-open-file state channel path)))
+                :no (swap! state assoc-in [:opened-file :dirty?] true)
                 (recur)))
-            (swap! state-cur dissoc :reloaded-file)
-            (swap! state-cur assoc-in [:opened-file :last-write-time] reload-time))
-          (swap! state-cur assoc-in [:opened-file :dirty?] true))))
-    (<! (load-folder state-cur (root-path @state-cur) channel))))
+            (swap! state dissoc :reloaded-file)
+            (swap! state assoc-in [:opened-file :last-write-time] reload-time))
+          (swap! state assoc-in [:opened-file :dirty?] true))))
+    (<! (load-folder state (root-path @state) channel))))
 
-(defn toggle-open-directory [state-cur channel path]
+(defn toggle-open-directory [state channel path]
   (go
-    (swap! state-cur update-in [:open-directories] utils/toggle path)
-    (<! (load-folder state-cur (root-path @state-cur) channel))))
+    (swap! state update-in [:open-directories] utils/toggle path)
+    (<! (load-folder state (root-path @state) channel))))
 
 (defn periodically-send [v]
   (let [c (chan)]
@@ -238,39 +238,61 @@
         (>! c v)))
     c))
 
-(defn set-left-width! [state-cur client-x]
+(defn set-left-width! [state client-x]
   (let [actual-client-x (- client-x 4)
-        min-left-width (get-in @state-cur [:splitter :min-left-width])
+        min-left-width (get-in @state [:splitter :min-left-width])
         width (if (< actual-client-x min-left-width)
                 min-left-width
                 client-x)]
-    (swap! state-cur assoc-in [:splitter :left-width] width)
+    (swap! state assoc-in [:splitter :left-width] width)
     :drag))
 
-(defn splitter-down [state-cur channel]
+(defn splitter-down [state channel]
   (go-loop
     [drag-state :drag]
     (let [[action [client-x]] (<! channel)]
       (case [drag-state action]
-        [:drag :move] (recur (set-left-width! state-cur client-x))
+        [:drag :move] (recur (set-left-width! state client-x))
         nil))))
 
-(defn files [state-cur channel]
+(defn- path-or-name [opened-file]
+  (if-let [path (:path opened-file)]
+    path
+    (:name opened-file)))
+
+(defn edit-file-status [state]
+  (str "Editing " (path-or-name (:opened-file state))))
+
+(defn files [state channel]
   (go
     (while true
       (let [[[cmd arg] _] (alts! [channel (periodically-send [:reload-file nil])])]
         (case cmd
-          :open-root-directory (<! (open-folder-browser-dialog state-cur channel))
-          :toggle-open-directory (<! (toggle-open-directory state-cur channel arg))
-          :open-file (<! (open-file state-cur channel arg))
-          :new (<! (new-file state-cur channel))
-          :delete (<! (delete-file-dialog state-cur channel))
-          :save (<! (save state-cur channel))
-          :reload-file (<! (reload-file state-cur channel))
-          :evaluate-form (swap! state-cur evaluate-form)
-          :evaluate-script (swap! state-cur evaluate-script)
-          :before-change (swap! state-cur data/shift-results arg)
-          :change (swap! state-cur data/update-text arg)
-          :cursor-selection (swap! state-cur data/update-cursor-selection arg)
-          :splitter-down (<! (splitter-down state-cur channel))
+          ; toolbar
+          :open-root-directory (<! (open-folder-browser-dialog state channel))
+          :new (<! (new-file state channel))
+          :delete (<! (delete-file-dialog state channel))
+          :save (<! (save state channel))
+
+          ; tree
+          :toggle-open-directory (<! (toggle-open-directory state channel arg))
+          :open-file (<! (open-file state channel arg))
+
+          ; behind the scenes
+          :reload-file (<! (reload-file state channel))
+
+          ; file
+          :evaluate-form (swap! state evaluate-form)
+          :evaluate-script (swap! state evaluate-script)
+          :before-change (swap! state data/shift-results arg)
+          :change (swap! state data/update-text arg)
+          :cursor-selection (swap! state data/update-cursor-selection arg)
+
+          ; splitter
+          :splitter-down (<! (splitter-down state channel))
+
+          ; status
+          :push-edit-file-status (swap! state update-in [:status] conj (edit-file-status @state))
+          :pop-status (swap! state update-in [:status] pop)
+
           :default)))))

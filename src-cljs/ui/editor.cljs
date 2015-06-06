@@ -82,7 +82,9 @@
         before-change (make-on-before-change channel)
         change #(put! channel [:change (-> %1 .-doc .getValue)])
         cursor-activity #(put! channel [:cursor-selection (cursor-selection %)])
-        focus (fn [cm] (.focus cm) (cursor-activity cm))]
+        focus (fn [cm] (.focus cm) (cursor-activity cm))
+        on-focus #(put! channel [:push-edit-file-status ])
+        on-blur #(put! channel [:pop-status])]
 
     (reagent/create-class
       {:reagent-render
@@ -91,9 +93,9 @@
                         :width "100%"
                         :height "100%"}}])
        :component-will-update
-       (fn [this [_ opened channel]]
+       (fn [this [_ opened-file channel]]
          (let [cm (get-cm this)
-               results (:results opened)]
+               results (:results opened-file)]
            (when (not= results @cached-results)
              (evaluate-script-results cm results)
              (reset! cached-results results))
@@ -116,13 +118,17 @@
            (.on cm "beforeChange" before-change)
            (.on cm "change" change)
            (.on cm "cursorActivity" cursor-activity)
+           (.on cm "focus" on-focus)
+           (.on cm "blur" on-blur)
            (focus cm)))
        :component-did-unmount
        (fn [this]
          (let [cm (get-cm this)]
            (.off cm "beforeChange" before-change)
            (.off cm "change" change)
-           (.off cm "cursorActivity" cursor-activity)))})))
+           (.off cm "cursorActivity" cursor-activity)
+           (.off cm "focus" on-focus)
+           (.off cm "blur" on-blur)))})))
 
 (defn make-fake-tab [opened-file channel]
   [:div
