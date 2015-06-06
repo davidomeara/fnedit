@@ -5,7 +5,7 @@
   (str (.ToString ex)
        (if (nil? (.InnerException ex))
          ""
-         (.ToString (.InnerException ex)))))
+         (str "\n\n" (.ToString (.InnerException ex))))))
 
 (defn result-make [from to success? item]
   {:from from
