@@ -1,7 +1,6 @@
 (ns ui.tree-view
   (:require [cljs.core.async :refer [put!]]
             [ui.events :as events]
-            [ui.widgets :refer [button]]
             [ui.debug :as debug]))
 
 (defn padded-div [depth txt attributes]

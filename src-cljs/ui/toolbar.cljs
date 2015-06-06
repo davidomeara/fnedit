@@ -35,28 +35,28 @@
     [:span toolbar-style [:i.icon.ion-ios-folder-outline icon-style] "Open"]
     -1
     button-style
-    (delay true)
+    true
     #(put! out [:open-root-directory])]
 
    [button
     [:span toolbar-style [:i.icon.ion-ios-compose-outline icon-style] "New"]
     -1
     button-style
-    (delay true)
+    true
     #(put! out [:new])]
 
    [button
     [:span toolbar-style [:i.icon.ion-ios-trash-outline icon-style] "Delete"]
     -1
     button-style
-    (reagent/cursor opened [:path])
+    (:path opened)
     #(put! out [:delete])]
 
    [button
     [:span toolbar-style [:i.icon.ion-ios-download-outline icon-style] "Save"]
     -1
     button-style
-    (reagent/cursor opened [:dirty?])
+    (:dirty? opened)
     #(put! out [:save])]
 
    [button
@@ -65,7 +65,7 @@
      "Eval selection"]
     -1
     button-style
-    (reagent/cursor opened [:cursor-selection])
+    (:cursor-selection opened)
     #(put! out [:evaluate-form nil])]
 
    [button
