@@ -81,9 +81,9 @@
   (let [cached-results (atom nil)
         before-change (make-on-before-change channel)
         change #(put! channel [:change (-> %1 .-doc .getValue)])
-        cursor-activity #(put! channel [:cursor-selection (cursor-selection %)])
-        focus (fn [cm] (.focus cm) (cursor-activity cm))
-        on-focus #(put! channel [:push-edit-file-status ])
+        before-selection-change #(put! channel [:cursor-selection (cursor-selection %)])
+        focus #(.focus %)
+        on-focus #(put! channel [:push-edit-file-status])
         on-blur #(put! channel [:pop-status])]
 
     (reagent/create-class
@@ -117,7 +117,7 @@
                               :theme "default"}))]
            (.on cm "beforeChange" before-change)
            (.on cm "change" change)
-           (.on cm "cursorActivity" cursor-activity)
+           (.on cm "beforeSelectionChange" before-selection-change)
            (.on cm "focus" on-focus)
            (.on cm "blur" on-blur)
            (focus cm)))
@@ -126,7 +126,7 @@
          (let [cm (get-cm this)]
            (.off cm "beforeChange" before-change)
            (.off cm "change" change)
-           (.off cm "cursorActivity" cursor-activity)
+           (.off cm "beforeSelectionChange" before-selection-change)
            (.off cm "focus" on-focus)
            (.off cm "blur" on-blur)))})))
 
