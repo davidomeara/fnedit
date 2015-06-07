@@ -153,10 +153,6 @@
           result))
       true)))
 
-(defn focus [state]
-  (when (:opened-file @state)
-    (swap! state assoc-in [:opened-file :focus] (js/Date.))))
-
 (defn open-folder-browser-dialog [state channel]
   (go
     (let [{:keys [path cancel exception]} (<! (clr/winforms-async-eval 'core.fs/folder-browser-dialog))]
