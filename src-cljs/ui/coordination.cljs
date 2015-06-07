@@ -1,7 +1,7 @@
 (ns ui.coordination
   (:require-macros [cljs.core.async.macros :refer [go go-loop]])
   (:require [clojure.set :as set]
-            [cljs.core.async :refer [chan <! >! timeout alts!]]
+            [cljs.core.async :refer [chan <! >! timeout alts! dropping-buffer]]
             [ui.data :as data]
             [ui.clr :as clr]
             [ui.debug :as debug]
@@ -83,7 +83,7 @@
   [state message channel]
   (go
     (swap! state update-in [:save-file] merge {:caption "Cannot save file"
-                                                   :exception message})
+                                               :exception message})
     (loop []
       (case (<! channel)
         :ok nil
@@ -153,6 +153,10 @@
           result))
       true)))
 
+(defn focus [state]
+  (when (:opened-file @state)
+    (swap! state assoc-in [:opened-file :focus] (js/Date.))))
+
 (defn open-folder-browser-dialog [state channel]
   (go
     (let [{:keys [path cancel exception]} (<! (clr/winforms-async-eval 'core.fs/folder-browser-dialog))]
@@ -175,9 +179,9 @@
   (go
     (when (<! (close-file? state channel))
       (swap! state assoc :opened-file {:id (next-opened-id state)
-                                           :name "untitled"
-                                           :text ""
-                                           :dirty? true}))))
+                                       :name "untitled"
+                                       :text ""
+                                       :dirty? true}))))
 
 (defn do-open-file [state channel path]
   (go
@@ -192,10 +196,10 @@
           (swap! state dissoc :open-file))
         (when (and path text)
           (swap! state assoc :opened-file {:id (next-opened-id state)
-                                               :path path
-                                               :name name
-                                               :last-write-time last-write-time
-                                               :text text}))))
+                                           :path path
+                                           :name name
+                                           :last-write-time last-write-time
+                                           :text text}))))
     (<! (load-folder state (root-path @state) channel))))
 
 (defn open-file [state channel path]
@@ -231,10 +235,10 @@
     (<! (load-folder state (root-path @state) channel))))
 
 (defn periodically-send [v]
-  (let [c (chan)]
+  (let [c (chan (dropping-buffer 1))]
     (go
       (while true
-        (<! (timeout 1000))
+        (<! (timeout 2000))
         (>! c v)))
     c))
 
@@ -265,34 +269,35 @@
 
 (defn files [state channel]
   (go
-    (while true
-      (let [[[cmd arg] _] (alts! [channel (periodically-send [:reload-file nil])])]
-        (case cmd
-          ; toolbar
-          :open-root-directory (<! (open-folder-browser-dialog state channel))
-          :new (<! (new-file state channel))
-          :delete (<! (delete-file-dialog state channel))
-          :save (<! (save state channel))
+    (let [timed-out-channel (periodically-send [:reload-file])]
+      (while true
+        (let [[[cmd arg] _] (alts! [channel timed-out-channel])]
+          (case cmd
+            ; toolbar
+            :open-root-directory (<! (open-folder-browser-dialog state channel))
+            :new (<! (new-file state channel))
+            :delete (<! (delete-file-dialog state channel))
+            :save (<! (save state channel))
 
-          ; tree
-          :toggle-open-directory (<! (toggle-open-directory state channel arg))
-          :open-file (<! (open-file state channel arg))
+            ; tree
+            :toggle-open-directory (<! (toggle-open-directory state channel arg))
+            :open-file (<! (open-file state channel arg))
 
-          ; behind the scenes
-          :reload-file (<! (reload-file state channel))
+            ; behind the scenes
+            :reload-file (<! (reload-file state channel))
 
-          ; file
-          :evaluate-form (swap! state evaluate-form)
-          :evaluate-script (swap! state evaluate-script)
-          :before-change (swap! state data/shift-results arg)
-          :change (swap! state data/update-text arg)
-          :cursor-selection (swap! state data/update-cursor-selection arg)
+            ; file
+            :evaluate-form (swap! state evaluate-form)
+            :evaluate-script (swap! state evaluate-script)
+            :before-change (swap! state data/shift-results arg)
+            :change (swap! state data/update-text arg)
+            :cursor-selection (swap! state data/update-cursor-selection arg)
 
-          ; splitter
-          :splitter-down (<! (splitter-down state channel))
+            ; splitter
+            :splitter-down (<! (splitter-down state channel))
 
-          ; status
-          :push-edit-file-status (swap! state update-in [:status] conj (edit-file-status @state))
-          :pop-status (swap! state update-in [:status] pop)
+            ; status
+            :push-edit-file-status (swap! state update-in [:status] conj (edit-file-status @state))
+            :pop-status (swap! state update-in [:status] pop)
 
-          :default)))))
+            :default))))))
