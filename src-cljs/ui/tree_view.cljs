@@ -37,8 +37,8 @@
                                :width "14px"
                                :height "14px"}}]
        (if (contains? open-directories path)
-         [:i.ion-arrow-down-b icon-style]
-         [:i.ion-arrow-right-b icon-style]))
+         [:i.ion-ios-arrow-down icon-style]
+         [:i.ion-ios-arrow-right icon-style]))
      [:span {:style {:padding-left "4px"}} name]]
     {:on-click #(events/stop-event % (fn [] (put! channel [:toggle-open-directory path])))}]
 
