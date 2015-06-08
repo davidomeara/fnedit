@@ -59,13 +59,22 @@
     (swap! state dissoc :delete-file)
     (<! (load-folder state (root-path @state) channel))))
 
+(defn focus [state]
+  (if (:opened-file state)
+    (assoc-in state [:opened-file :focus] (js/Date.))
+    state))
+
+(defn swap-focus! [state]
+  (swap! state focus))
+
 (defn evaluate [state to-from-fn]
   (let [opened (:opened-file state)
         [from to] (to-from-fn opened)
         text (:text opened)]
     (->> text
       (clr/winforms-sync-eval (root-path state) from to)
-      (data/update-results state))))
+      (data/update-results state)
+      focus)))
 
 (defn evaluate-script [state]
   (evaluate
@@ -129,7 +138,8 @@
                        (<! (cannot-save-file state result channel))
                        (save-as state channel))
           false))
-      (save-as state channel))))
+      (save-as state channel))
+    (swap-focus! state)))
 
 (defn close-file?
   "Returns true if file was closed, false if not."
@@ -166,7 +176,8 @@
           (swap! state dissoc :open-root-directory))
         (when path
           (swap! state assoc :open-directories #{path})
-          (<! (load-folder state path channel)))))))
+          (<! (load-folder state path channel)))))
+    (swap-focus! state)))
 
 (defn next-opened-id [state]
   (:opened-id-count (swap! state update-in [:opened-id-count] inc)))

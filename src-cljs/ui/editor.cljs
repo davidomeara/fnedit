@@ -82,6 +82,7 @@
         before-change (make-on-before-change channel)
         change #(put! channel [:change (-> %1 .-doc .getValue)])
         before-selection-change #(put! channel [:cursor-selection (cursor-selection %)])
+        focus #(.focus %)
         on-focus #(put! channel [:push-edit-file-status])
         on-blur #(put! channel [:pop-status])]
 
@@ -99,6 +100,10 @@
              (evaluate-script-results cm results)
              (reset! cached-results results))
            (.refresh cm)))
+       :component-did-update
+       (fn [this]
+         (let [cm (get-cm this)]
+           (focus cm)))
        :component-did-mount
        (fn [this]
          (let [cm (js/CodeMirror.
@@ -117,7 +122,8 @@
            (.on cm "change" change)
            (.on cm "beforeSelectionChange" before-selection-change)
            (.on cm "focus" on-focus)
-           (.on cm "blur" on-blur)))
+           (.on cm "blur" on-blur)
+           (focus cm)))
        :component-did-unmount
        (fn [this]
          (let [cm (get-cm this)]
