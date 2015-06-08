@@ -45,7 +45,7 @@
               :min-height "1.2em"
               :border-top "solid 1px #b6b6b7"
               :display "inline-block"}}
-     (first (:status state))]]
+     (if-let [h (:hover state)] h (:focus state))]]
    (when debug
      [(fn []
         [:pre

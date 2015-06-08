@@ -34,38 +34,44 @@
     channel
     [:span toolbar-style [:i.icon.ion-ios-folder-outline icon-style] "Open"]
     {:style button-style
-     :action [:open-root-directory]}]
+     :action [:open-root-directory]
+     :status "Open folder"}]
 
    [button
     channel
     [:span toolbar-style [:i.icon.ion-ios-compose-outline icon-style] "New"]
     {:style button-style
-     :action [:new]}]
+     :action [:new]
+     :status "New file"}]
 
    [button
     channel
     [:span toolbar-style [:i.icon.ion-ios-trash-outline icon-style] "Delete"]
     {:style button-style
      :enabled? (:path opened)
-     :action [:delete]}]
+     :action [:delete]
+     :status "Delete opened file"}]
 
    [button
     channel
     [:span toolbar-style [:i.icon.ion-ios-download-outline icon-style] "Save"]
     {:style button-style
      :enabled? (:dirty? opened)
-     :action [:save]}]
+     :action [:save]
+     :status "Save opened file"}]
 
    [button
     channel
     [:span toolbar-style [:span {:style {:margin-right "5px"}} "(...)"] "Eval selection"]
     {:style button-style
      :enabled? (:cursor-selection opened)
-     :action [:evaluate-form]}]
+     :action [:evaluate-form]
+     :status "Eval top level forms that fall within the selection"}]
 
    [button
     channel
     [:span toolbar-style [:i.icon.ion-ios-arrow-thin-down icon-style] "Eval file"]
     {:style button-style
      :enabled? opened
-     :action [:evaluate-script]}]])
+     :action [:evaluate-script]
+     :status "Eval all forms in file"}]])

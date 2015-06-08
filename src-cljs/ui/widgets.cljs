@@ -21,12 +21,18 @@
     :status=nil           When not nil, set as focus using the channel."
   [channel title button-options]
   (let [options (merge {:tab-index -1 :enabled? true} button-options)
-        put #(put! channel (:action options))]
+        blur (fn [] (when-let [s (:status options)] (put! channel [:blur])) nil)
+        unhover (fn [] (when-let [s (:status options)] (put! channel [:unhover])))
+        action (fn [] (put! channel (:action options)) nil)]
     (if (:enabled? options)
       [:a.unselectable.widget-behavior.widget-color.font
        {:tabIndex (:tab-index options)
-        :on-click (fn [e] (put) nil)
-        :on-key-down (key-down put)
+        :on-focus (fn [] (when-let [s (:status options)] (put! channel [:focus s])) nil)
+        :on-blur blur
+        :on-mouse-enter (fn [] (when-let [s (:status options)] (put! channel [:hover s])) nil)
+        :on-mouse-leave unhover
+        :on-click (fn [] (unhover) (action))
+        :on-key-down (key-down (fn [] (blur) (action)))
         :style (merge (:style options) {:display "inline-block" :cursor "pointer"})}
        title]
       [:a.unselectable.widget-behavior.disabled-widget-color.font

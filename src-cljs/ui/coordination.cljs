@@ -304,7 +304,10 @@
             :splitter-down (<! (splitter-down state channel))
 
             ; status
-            :push-edit-file-status (swap! state update-in [:status] conj (edit-file-status @state))
-            :pop-status (swap! state update-in [:status] pop)
+            :hover (swap! state assoc :hover arg)
+            :unhover (swap! state dissoc :hover arg)
+            :focus (swap! state assoc :focus arg)
+            :focus-editor (swap! state assoc :focus (edit-file-status @state))
+            :blur (swap! state dissoc :focus)
 
             :default))))))

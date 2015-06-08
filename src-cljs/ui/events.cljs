@@ -61,5 +61,6 @@
     (let [command (key-command e)]
       (when command
         (-> js/document .-activeElement .blur)
+        (put! channel [:unhover])
         (stop-event e)
-        (put! channel [command nil])))))
+        (put! channel [command])))))

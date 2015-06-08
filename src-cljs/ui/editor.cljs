@@ -83,8 +83,8 @@
         change #(put! channel [:change (-> %1 .-doc .getValue)])
         before-selection-change #(put! channel [:cursor-selection (cursor-selection %)])
         focus #(.focus %)
-        on-focus #(put! channel [:push-edit-file-status])
-        on-blur #(put! channel [:pop-status])]
+        on-focus #(put! channel [:focus-editor])
+        on-blur #(put! channel [:blur])]
 
     (reagent/create-class
       {:reagent-render
