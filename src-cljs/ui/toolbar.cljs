@@ -10,16 +10,12 @@
    :flex-shrink 0
    :margin "2px"
    :border 0
-   :text-align "left"
-   :line-height "24px"})
+   :text-align "center"
+   :line-height "24px"
+   :width "24px"
+   :height "24px"})
 
-(def toolbar-style
-  {:style {:display "flex"
-           :flex-direction "row"
-           :align-items "center"}})
-
-(def icon-style {:style {:margin-right "5px"
-                         :font-size "18px"}})
+(def icon-style {:style {:font-size "18px"}})
 
 (defn toolbar [opened channel]
   [:div.unselectable
@@ -30,48 +26,55 @@
             :background-color "#f5f2f1"
             :border-bottom "1px solid #b6b6b7"}}
 
-   [button
-    channel
-    [:span toolbar-style [:i.icon.ion-ios-folder-outline icon-style] "Open"]
-    {:style button-style
-     :action [:open-root-directory]
-     :status "Open folder"}]
+   [:div {:style {:display "flex"
+                  :flex-direction "row"
+                  :justify-content "flex-start"}}
+    [button
+     channel
+     [:i.icon.ion-ios-folder-outline icon-style]
+     {:style button-style
+      :action [:open-root-directory]
+      :status "Open folder (Ctrl+O)"}]
 
-   [button
-    channel
-    [:span toolbar-style [:i.icon.ion-ios-compose-outline icon-style] "New"]
-    {:style button-style
-     :action [:new]
-     :status "New file"}]
+    [button
+     channel
+     [:i.icon.ion-ios-compose-outline icon-style]
+     {:style button-style
+      :action [:new]
+      :status "New file (Ctrl+N)"}]]
 
-   [button
-    channel
-    [:span toolbar-style [:i.icon.ion-ios-trash-outline icon-style] "Delete"]
-    {:style button-style
-     :enabled? (:path opened)
-     :action [:delete]
-     :status "Delete opened file"}]
+   [:div {:style {:display "flex"
+                  :flex-direction "row"
+                  :justify-content "flex-end"
+                  :flex-grow 1}}
+    [button
+     channel
+     [:i.icon.ion-ios-trash-outline icon-style]
+     {:style button-style
+      :enabled? (:path opened)
+      :action [:delete]
+      :status "Delete opened file"}]
 
-   [button
-    channel
-    [:span toolbar-style [:i.icon.ion-ios-download-outline icon-style] "Save"]
-    {:style button-style
-     :enabled? (:dirty? opened)
-     :action [:save]
-     :status "Save opened file"}]
+    [button
+     channel
+     [:i.icon.ion-ios-download-outline icon-style]
+     {:style button-style
+      :enabled? (:dirty? opened)
+      :action [:save]
+      :status "Save opened file (Ctrl+S)"}]
 
-   [button
-    channel
-    [:span toolbar-style [:span {:style {:margin-right "5px"}} "(...)"] "Eval selection"]
-    {:style button-style
-     :enabled? (:cursor-selection opened)
-     :action [:evaluate-form]
-     :status "Eval top level forms that fall within the selection"}]
+    [button
+     channel
+     [:span "(...)"]
+     {:style button-style
+      :enabled? (:cursor-selection opened)
+      :action [:evaluate-form]
+      :status "Eval top level forms that fall within the selection (Ctrl+Space)"}]
 
-   [button
-    channel
-    [:span toolbar-style [:i.icon.ion-ios-arrow-thin-down icon-style] "Eval file"]
-    {:style button-style
-     :enabled? opened
-     :action [:evaluate-script]
-     :status "Eval all forms in file"}]])
+    [button
+     channel
+     [:i.icon.ion-ios-arrow-thin-down icon-style]
+     {:style button-style
+      :enabled? opened
+      :action [:evaluate-script]
+      :status "Eval all forms in file (Ctrl+Shift+Space)"}]]])
