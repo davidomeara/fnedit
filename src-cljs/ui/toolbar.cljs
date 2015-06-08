@@ -21,7 +21,7 @@
 (def icon-style {:style {:margin-right "5px"
                          :font-size "18px"}})
 
-(defn toolbar [opened out]
+(defn toolbar [opened channel]
   [:div.unselectable
    {:style {:flex-grow 0
             :flex-shrink 0
@@ -31,45 +31,41 @@
             :border-bottom "1px solid #b6b6b7"}}
 
    [button
+    channel
     [:span toolbar-style [:i.icon.ion-ios-folder-outline icon-style] "Open"]
-    -1
-    button-style
-    true
-    #(put! out [:open-root-directory])]
+    {:style button-style
+     :action [:open-root-directory]}]
 
    [button
+    channel
     [:span toolbar-style [:i.icon.ion-ios-compose-outline icon-style] "New"]
-    -1
-    button-style
-    true
-    #(put! out [:new])]
+    {:style button-style
+     :action [:new]}]
 
    [button
+    channel
     [:span toolbar-style [:i.icon.ion-ios-trash-outline icon-style] "Delete"]
-    -1
-    button-style
-    (:path opened)
-    #(put! out [:delete])]
+    {:style button-style
+     :enabled? (:path opened)
+     :action [:delete]}]
 
    [button
+    channel
     [:span toolbar-style [:i.icon.ion-ios-download-outline icon-style] "Save"]
-    -1
-    button-style
-    (:dirty? opened)
-    #(put! out [:save])]
+    {:style button-style
+     :enabled? (:dirty? opened)
+     :action [:save]}]
 
    [button
-    [:span toolbar-style
-     [:span {:style {:margin-right "5px"}} "(...)"]
-     "Eval selection"]
-    -1
-    button-style
-    (:cursor-selection opened)
-    #(put! out [:evaluate-form])]
+    channel
+    [:span toolbar-style [:span {:style {:margin-right "5px"}} "(...)"] "Eval selection"]
+    {:style button-style
+     :enabled? (:cursor-selection opened)
+     :action [:evaluate-form]}]
 
    [button
+    channel
     [:span toolbar-style [:i.icon.ion-ios-arrow-thin-down icon-style] "Eval file"]
-    -1
-    button-style
-    opened
-    #(put! out [:evaluate-script])]])
+    {:style button-style
+     :enabled? opened
+     :action [:evaluate-script]}]])

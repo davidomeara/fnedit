@@ -1,5 +1,6 @@
 (ns ui.widgets
-  (:require [reagent.core :as reagent]
+  (:require [cljs.core.async :refer [put!]]
+            [reagent.core :as reagent]
             [ui.events :as events]
             [ui.debug :as debug]))
 
@@ -9,19 +10,29 @@
       (f))
     nil))
 
-(defn button [title tabindex style enabled? on-click-fn]
-  (if enabled?
-    [:a.unselectable.widget-behavior.widget-color.font
-     {:tabIndex tabindex
-      :on-click (fn [] (on-click-fn) nil)
-      :on-key-down (key-down on-click-fn)
-      :style (merge style {:display "inline-block"
-                           :cursor "pointer"})}
-     title]
-    [:a.unselectable.widget-behavior.disabled-widget-color.font
-     {:tabIndex tabindex
-      :style (merge style {:display "inline-block"})}
-     title]))
+(defn button
+  "required
+    channel, title
+   optional [key=default]
+    :tab-index=-1
+    :style=nil
+    :enabled?=true
+    :action=nil           When not nil, sent to channel on click or focus enter.
+    :status=nil           When not nil, set as focus using the channel."
+  [channel title button-options]
+  (let [options (merge {:tab-index -1 :enabled? true} button-options)
+        put #(put! channel (:action options))]
+    (if (:enabled? options)
+      [:a.unselectable.widget-behavior.widget-color.font
+       {:tabIndex (:tab-index options)
+        :on-click (fn [e] (put) nil)
+        :on-key-down (key-down put)
+        :style (merge (:style options) {:display "inline-block" :cursor "pointer"})}
+       title]
+      [:a.unselectable.widget-behavior.disabled-widget-color.font
+       {:tabIndex (:tab-index options)
+        :style (merge (:style options) {:display "inline-block"})}
+       title])))
 
 (def standard-widget-style
   {:margin "2px"
@@ -34,18 +45,20 @@
 
 (def icon-style {:style {:margin-right "5px"}})
 
-(defn positive-button [caption tabindex enabled? on-click-fn]
+(defn standard-button [channel title options]
   [button
-   [:span [:i.icon.ion-checkmark icon-style] caption]
-   tabindex
-   standard-button-style
-   enabled?
-   on-click-fn])
+   channel
+   title
+   (merge options {:style (merge (:style options) standard-button-style)})])
 
-(defn negative-button [caption tabindex enabled? on-click-fn]
-  [button
+(defn positive-button [channel caption options]
+  [standard-button
+   channel
+   [:span [:i.icon.ion-checkmark icon-style] caption]
+   options])
+
+(defn negative-button [channel caption options]
+  [standard-button
+   channel
    [:span [:i.icon.ion-close icon-style] caption]
-   tabindex
-   standard-button-style
-   enabled?
-   on-click-fn])
+   options])

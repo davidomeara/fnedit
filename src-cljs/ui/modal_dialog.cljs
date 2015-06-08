@@ -51,8 +51,8 @@
        (->> choices
          (partition 3)
          (map-indexed
-           (fn [i [k t v]]
-             ^{:key k} [t v (inc i) true #(put! channel k)]))
+           (fn [tab-index [key button-type caption]]
+             ^{:key tab-index} [button-type channel caption {:tab-index (inc tab-index) :action key}]))
          reverse)]]]
     [:span]))
 
