@@ -133,31 +133,11 @@
            (.off cm "focus" on-focus)
            (.off cm "blur" on-blur)))})))
 
-(defn make-fake-tab [opened-file channel]
-  [:div
-   {:style {:display "flex"
-            :flex-grow 1
-            :flex-direction "column"}}
-   [:div.unselectable
-    {:style {:display "flex"
-             :flex-direction "row"
-             :border-bottom "1px solid #b6b6b7"
-             :background-color "#f5f2f1"}}
-    [:div.font.unselectable
-     {:style {:flex-grow 0
-              :padding "4px"
-              :color "white"
-              :background-color "#2182fb"}} (:name opened-file)]]
-   [:div
-    {:style {:display "flex"
-             :flex-grow 1
-             :position "relative"}}
-    [make-editor opened-file channel]]])
-
 (defn editor [opened-file channel]
   [:div {:style {:display "flex"
-                 :flex-grow 1}}
+                 :flex-grow 1
+                 :position "relative"}}
    (when opened-file
      (let [coll [opened-file]]
        (for [x coll]
-         ^{:key (:id x)} [make-fake-tab opened-file channel])))])
+         ^{:key (:id x)} [make-editor opened-file channel])))])
