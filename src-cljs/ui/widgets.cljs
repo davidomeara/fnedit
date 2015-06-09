@@ -30,9 +30,9 @@
         :on-focus (fn [] (when-let [s (:status options)] (put! channel [:focus s])) nil)
         :on-blur blur
         :on-mouse-enter (fn [] (when-let [s (:status options)] (put! channel [:hover s])) nil)
-        :on-mouse-leave unhover
-        :on-click (fn [] (unhover) (action))
-        :on-key-down (key-down (fn [] (blur) (action)))
+        :on-mouse-leave (fn [] (unhover) (blur))
+        :on-click (fn [] (unhover) (blur) (action))
+        :on-key-down (key-down (fn [] (unhover) (blur) (action)))
         :style (merge (:style options) {:display "inline-block" :cursor "pointer"})}
        title]
       [:a.unselectable.widget-behavior.disabled-widget-color.font
