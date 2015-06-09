@@ -6,7 +6,8 @@
                   [org.clojure/clojurescript "0.0-3211" :scope "test"]
                   [org.clojure/core.async "0.1.346.0-17112a-alpha" :scope "test"]
                   [reagent "0.5.0" :scope "test"]
-                  [cljsjs/codemirror "5.1.0-0" :scope "test"]])
+                  [cljsjs/codemirror "5.1.0-0" :scope "test"]
+                  [garden "1.2.5"]])
 
 (require
   '[clojure.pprint :as p]

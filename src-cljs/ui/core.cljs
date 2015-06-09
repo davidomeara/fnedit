@@ -9,6 +9,7 @@
             [ui.tree-view :refer [tree-view]]
             [ui.toolbar :refer [toolbar]]
             [ui.modal-dialog :as modal-dialog]
+            [ui.style :as style]
             [ui.debug :as debug]))
 
 (def initial-state
@@ -55,6 +56,12 @@
                   :border-top "solid 1px #999"}}
          (debug/stringify state)])])])
 
+
+(defn render-style [debug]
+  (reagent/render
+    [:style (style/css debug)]
+    (.getElementById js/document "style")))
+
 (defn main [debug]
   (when debug
     (enable-console-print!))
@@ -74,6 +81,8 @@
       "keydown"
       (events/make-keydown channel)
       true)
+
+    (render-style debug)
 
     (reagent/render
       [(fn [s] [main-component @s channel debug]) state]

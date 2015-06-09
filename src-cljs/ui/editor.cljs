@@ -7,11 +7,21 @@
             [ui.events :as events]
             [ui.debug :as debug]))
 
+(def line-widget-style
+  {:overflow-x "auto"
+   :overflow-y "hidden"
+   :margin "calc(0.5em - 3px)"
+   :padding "0.5em"
+   :background-color "#f7f7f7"
+   :border "1px solid #dddddd"
+   :white-space "pre"})
+
 (defn line-widget [value]
-  (let [div (.createElement js/document "div")
-        node (.createTextNode js/document value)]
-    (.appendChild div node)
-    div))
+  (let [div (.createElement js/document "div")]
+    (->> [:div {:style line-widget-style} value]
+      reagent/render-to-static-markup
+      (set! (.-innerHTML div)))
+    (.-firstChild div)))
 
 (defn clear-line-widgets [cm]
   (.eachLine
