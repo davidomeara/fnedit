@@ -41,8 +41,7 @@
        title])))
 
 (def standard-widget-style
-  {:margin "2px"
-   :display "inline-block"
+  {:display "inline-block"
    :width "100px"})
 
 (def standard-button-style
