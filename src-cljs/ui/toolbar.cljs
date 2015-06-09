@@ -23,8 +23,8 @@
             :flex-shrink 0
             :display "flex"
             :flex-direction "row"
-            :background-color "#f5f2f1"
-            :border-bottom "1px solid #b6b6b7"}}
+            :background-color "#f7f7f7"
+            :border-bottom "1px solid #999"}}
 
    [:div {:style {:display "flex"
                   :flex-direction "row"

@@ -11,16 +11,16 @@
   (reagent/create-class
     {:reagent-render
      (fn [contents]
-       [:div.fullscreen.transparent
+       [:div.fullscreen
         {:style {:z-index (swap! z-count inc)
+                 :background-color "rgba(0, 0, 0, .2)"
                  :display "flex"
                  :flex-direction "column"
                  :justify-content "flex-start"
                  :align-items "center"}}
         [:div.font
          {:style {:color "#222"
-                  :border "1px solid #b6b6b7"
-                  :background-color "#f5f2f1"
+                  :background-color "white"
                   :z-index (swap! z-count inc)
                   :margin-top "100px"
                   :padding "20px"

@@ -39,20 +39,20 @@
      [tree-view (:root state) (:open-directories state) (:opened-file state) channel]
      [editor (:opened-file state) channel]]
     [:div.font.unselectable
-     {:style {:background-color "#f5f2f1"
+     {:style {:background-color "#f7f7f7"
               :padding "4px"
               :line-height "1.2em"
               :min-height "1.2em"
-              :border-top "solid 1px #b6b6b7"
+              :border-top "solid 1px #999"
               :display "inline-block"}}
      (if-let [h (:hover state)] h (:focus state))]]
    (when debug
      [(fn []
         [:pre
-         {:style {:height "600px"
+         {:style {:height "50%"
                   :margin 0
                   :overflow "auto"
-                  :border-top "solid 1px #b6b6b7"}}
+                  :border-top "solid 1px #999"}}
          (debug/stringify state)])])])
 
 (defn main [debug]
@@ -60,6 +60,7 @@
     (enable-console-print!))
 
   (.addEventListener js/window "contextmenu" events/stop-event true)
+  (.addEventListener js/window "dragstart" events/stop-event true)
   (.addEventListener js/window "dragover" events/stop-event true)
   (.addEventListener js/window "drop" events/stop-event true)
 

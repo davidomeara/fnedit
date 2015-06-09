@@ -42,7 +42,7 @@
            {:style {:flex-grow 1
                     :width "1px"
                     :margin "0 4px 0 4px"
-                    :background-color "#b6b6b7"}}]]
+                    :background-color "#999"}}]]
          [:div
           {:style {:flex-grow 1
                    :flex-shrink 0

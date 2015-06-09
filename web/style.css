@@ -42,10 +42,6 @@
   overflow: auto;
 }
 
-.transparent {
-  background-color: rgba(0, 0, 0, .4);
-}
-
 .font {
   font-family: Segoe UI, Verdana, Tahoma, Arial;
   font-size: 12px;
@@ -74,20 +70,21 @@ input:focus, a {
 
 .widget-color {
   color: black;
-  border: 1px solid #b6b6b7;
+  border: 1px solid transparent;
 }
 
 .widget-color:hover, .widget-color:focus {
-  background-color: white;
+  color: #007aff;
+  border: 1px solid #007aff;
 }
 
 .widget-color:active {
   color: white;
-  background-color: #2182fb;
+  background-color: #007aff;
+  border: 1px solid #007aff;
 }
 
 .disabled-widget-color {
-  color: #adadad;
-  border: 1px solid #b6b6b7;
-  /*background-color: #eaeaea;*/
+  color: #999;
+  border: 1px solid transparent;
 }

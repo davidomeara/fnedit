@@ -15,7 +15,7 @@
   {:padding-left "18px"
    :cursor "default"
    :color (if opened? "white" "#222")
-   :background-color (if opened? "#2182fb" "transparent")})
+   :background-color (if opened? "#007aff" "transparent")})
 
 (defn file-div [depth {:keys [path name]} opened-file channel]
   [:div.font.unselectable
