@@ -30,6 +30,7 @@
                   :flex-direction "row"
                   :justify-content "flex-start"}}
     [button
+     style
      channel
      [:i.icon.ion-ios-folder-outline icon-style]
      {:style button-style
@@ -37,6 +38,7 @@
       :status "Open folder (Ctrl+O)"}]
 
     [button
+     style
      channel
      [:i.icon.ion-ios-compose-outline icon-style]
      {:style button-style
@@ -48,6 +50,7 @@
                   :justify-content "flex-end"
                   :flex-grow 1}}
     [button
+     style
      channel
      [:i.icon.ion-ios-trash-outline icon-style]
      {:style button-style
@@ -56,6 +59,7 @@
       :status "Delete opened file"}]
 
     [button
+     style
      channel
      [:i.icon.ion-ios-download-outline icon-style]
      {:style button-style
@@ -64,6 +68,7 @@
       :status "Save opened file (Ctrl+S)"}]
 
     [button
+     style
      channel
      [:span "(...)"]
      {:style button-style
@@ -72,6 +77,7 @@
       :status "Eval top level forms that fall within the selection (Ctrl+Space)"}]
 
     [button
+     style
      channel
      [:i.icon.ion-ios-arrow-thin-down icon-style]
      {:style button-style

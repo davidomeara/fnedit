@@ -51,13 +51,13 @@
              :flex-direction "column"
              :flex-grow 1}}
     [toolbar (:style state) (:opened-file state) channel]
-    [modal-dialog/yes-no (:delete-file state) channel]
-    [modal-dialog/ok (:open-root-directory state) channel]
-    [modal-dialog/ok (:open-file state) channel]
-    [modal-dialog/ok (:save-file state) channel]
-    [modal-dialog/yes-no-cancel (:close-file state) channel]
-    [modal-dialog/yes-no (:reloaded-file state) channel]
-    [hsplitter (:splitter state) channel
+    [modal-dialog/yes-no (:style state) (:delete-file state) channel]
+    [modal-dialog/ok (:style state) (:open-root-directory state) channel]
+    [modal-dialog/ok (:style state) (:open-file state) channel]
+    [modal-dialog/ok (:style state) (:save-file state) channel]
+    [modal-dialog/yes-no-cancel (:style state) (:close-file state) channel]
+    [modal-dialog/yes-no (:style state) (:reloaded-file state) channel]
+    [hsplitter (:style state) (:splitter state) channel
      [tree-view (:style state) (:root state) (:open-directories state) (:opened-file state) channel]
      [editor (:style state) (:opened-file state) channel]]
     [status (:style state) (:hover state) (:focus state)]]

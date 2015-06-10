@@ -19,7 +19,7 @@
     :enabled?=true
     :action=nil           When not nil, sent to channel on click or focus enter.
     :status=nil           When not nil, set as focus using the channel."
-  [channel title button-options]
+  [style channel title button-options]
   (let [options (merge {:tab-index -1 :enabled? true} button-options)
         action (fn [] (put! channel (:action options)) nil)]
     (if (:enabled? options)
@@ -36,7 +36,7 @@
       [:a.unselectable.button
        {:tabIndex (:tab-index options)
         :style (merge (:style options) {:display "inline-block"
-                                        :color "#999"
+                                        :color (:border-b style)
                                         :border "1px solid transparent"})}
        title])))
 
@@ -50,20 +50,23 @@
 
 (def icon-style {:style {:margin-right "5px"}})
 
-(defn standard-button [channel title options]
+(defn standard-button [style channel title options]
   [button
+   style
    channel
    title
    (merge options {:style (merge (:style options) standard-button-style)})])
 
-(defn positive-button [channel caption options]
+(defn positive-button [style channel caption options]
   [standard-button
+   style
    channel
    [:span [:i.icon.ion-checkmark icon-style] caption]
    options])
 
-(defn negative-button [channel caption options]
+(defn negative-button [style channel caption options]
   [standard-button
+   style
    channel
    [:span [:i.icon.ion-close icon-style] caption]
    options])
