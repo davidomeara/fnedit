@@ -1,5 +1,5 @@
 (ns ui.core
-  (:require [cljs.core.async :refer [chan put!]]
+  (:require [cljs.core.async :refer [chan]]
             [reagent.core :as reagent]
             [ui.clr :as clr]
             [ui.events :as events]
@@ -75,7 +75,7 @@
   (let [state (reagent/atom initial-state)
         channel (chan)]
 
-    (coordination/files state channel)
+    (coordination/process-commands state channel)
 
     (.addEventListener
       js/window

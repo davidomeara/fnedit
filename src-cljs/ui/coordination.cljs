@@ -1,7 +1,7 @@
 (ns ui.coordination
   (:require-macros [cljs.core.async.macros :refer [go go-loop]])
   (:require [clojure.set :as set]
-            [cljs.core.async :refer [chan <! >! timeout alts! dropping-buffer]]
+            [cljs.core.async :refer [chan <! >! timeout]]
             [ui.data :as data]
             [ui.clr :as clr]
             [ui.debug :as debug]
@@ -48,12 +48,12 @@
     (swap! state assoc-in [:delete-file :caption]
            "Are you sure you would like to delete this file?")
     (loop []
-      (case (<! channel)
+      (case (-> channel <! first)
         :yes (let [{:keys [exception]} (<! (clr/async-eval 'core.fs/delete (get-in @state [:opened-file :path])))]
-               (if exception
-                 (do (swap! state assoc-in [:delete-file :exception] exception)
-                     (recur))
-                 (swap! state dissoc :opened-file)))
+                     (if exception
+                       (do (swap! state assoc-in [:delete-file :exception] exception)
+                           (recur))
+                       (swap! state dissoc :opened-file)))
         :no nil
         (recur)))
     (swap! state dissoc :delete-file)
@@ -94,7 +94,7 @@
     (swap! state update-in [:save-file] merge {:caption "Cannot save file"
                                                :exception message})
     (loop []
-      (case (<! channel)
+      (case (-> channel <! first)
         :ok nil
         (recur)))
     (swap! state dissoc :save-file)
@@ -152,7 +152,7 @@
       (do
         (swap! state assoc-in [:close-file :caption] "Would you like to save this file before closing it?")
         (let [result (loop []
-                       (case (<! channel)
+                       (case (-> channel <! first)
                          :yes (if (<! (save state channel))
                                 true
                                 (recur))
@@ -170,7 +170,7 @@
         (do
           (swap! state assoc-in [:open-root-directory :caption] "Cannot open directory")
           (loop []
-            (case (<! channel)
+            (case (-> channel <! first)
               :ok nil
               (recur)))
           (swap! state dissoc :open-root-directory))
@@ -188,7 +188,8 @@
       (swap! state assoc :opened-file {:id (next-opened-id state)
                                        :name "untitled"
                                        :text ""
-                                       :dirty? true}))))
+                                       :dirty? true}))
+    (swap-focus! state)))
 
 (defn do-open-file [state channel path]
   (go
@@ -197,7 +198,7 @@
         (do
           (swap! state assoc-in [:open-file :caption] "Cannot open file")
           (loop []
-            (case (<! channel)
+            (case (-> channel <! first)
               :ok nil
               (recur)))
           (swap! state dissoc :open-file))
@@ -225,10 +226,10 @@
           (when (> (.getTime reload-time) (.getTime opened-time))
             (swap! state assoc-in [:reloaded-file :caption] "The file has been changed outside this editor.  Would you like to reload it?")
             (loop []
-              (case (<! channel)
+              (case (-> channel <! first)
                 :yes (let [path (get-in @state [:opened-file :path])]
-                       (swap! state dissoc :opened-file)
-                       (<! (do-open-file state channel path)))
+                         (swap! state dissoc :opened-file)
+                         (<! (do-open-file state channel path)))
                 :no (swap! state assoc-in [:opened-file :dirty?] true)
                 (recur)))
             (swap! state dissoc :reloaded-file)
@@ -241,13 +242,11 @@
     (swap! state update-in [:open-directories] utils/toggle path)
     (<! (load-folder state (root-path @state) channel))))
 
-(defn periodically-send [v]
-  (let [c (chan (dropping-buffer 1))]
-    (go
-      (while true
-        (<! (timeout 2000))
-        (>! c v)))
-    c))
+(defn periodically-send [c v]
+  (go
+    (while true
+      (<! (timeout 2000))
+      (>! c v))))
 
 (defn set-left-width! [state client-x]
   (let [actual-client-x (- client-x 4)
@@ -274,40 +273,53 @@
 (defn edit-file-status [state]
   (str "Editing " (path-or-name (:opened-file state))))
 
-(defn files [state channel]
+(defn process-main-commands [state channel]
   (go
-    (let [timed-out-channel (periodically-send [:reload-file])]
-      (while true
-        (let [[[cmd arg] _] (alts! [channel timed-out-channel])]
-          (case cmd
-            ; toolbar
-            :open-root-directory (<! (open-folder-browser-dialog state channel))
-            :new (<! (new-file state channel))
-            :delete (<! (delete-file-dialog state channel))
-            :save (<! (save state channel))
+    (while true
+      (let [[cmd arg] (<! channel)]
+        (case cmd
+          ; toolbar
+          :open-root-directory (<! (open-folder-browser-dialog state channel))
+          :new (<! (new-file state channel))
+          :delete (<! (delete-file-dialog state channel))
+          :save (<! (save state channel))
 
-            ; tree
-            :toggle-open-directory (<! (toggle-open-directory state channel arg))
-            :open-file (<! (open-file state channel arg))
+          ; tree
+          :toggle-open-directory (<! (toggle-open-directory state channel arg))
+          :open-file (<! (open-file state channel arg))
 
-            ; behind the scenes
-            :reload-file (<! (reload-file state channel))
+          ; behind the scenes
+          :reload-file (<! (reload-file state channel))
 
-            ; file
-            :evaluate-form (swap! state evaluate-form)
-            :evaluate-script (swap! state evaluate-script)
-            :before-change (swap! state data/shift-results arg)
-            :change (swap! state data/update-text arg)
-            :cursor-selection (swap! state data/update-cursor-selection arg)
+          ; file
+          :evaluate-form (swap! state evaluate-form)
+          :evaluate-script (swap! state evaluate-script)
+          :before-change (swap! state data/shift-results arg)
+          :change (swap! state data/update-text arg)
+          :cursor-selection (swap! state data/update-cursor-selection arg)
 
-            ; splitter
-            :splitter-down (<! (splitter-down state channel))
+          ; splitter
+          :splitter-down (<! (splitter-down state channel))
 
-            ; status
-            :hover (swap! state assoc :hover arg)
-            :unhover (swap! state dissoc :hover arg)
-            :focus (swap! state assoc :focus arg)
-            :focus-editor (swap! state assoc :focus (edit-file-status @state))
-            :blur (swap! state dissoc :focus)
+          :default)))))
 
-            :default))))))
+(defn process-anytime-commands [state ui-channel main-channel]
+  (go
+    (while true
+      (let [[cmd arg] (<! ui-channel)]
+        (case cmd
+          ; status
+          :blur (swap! state dissoc :focus)
+          :hover (swap! state assoc :hover arg)
+          :unhover (swap! state dissoc :hover)
+          :focus (swap! state assoc :focus arg)
+          :focus-editor (swap! state assoc :focus (edit-file-status @state))
+
+          (>! main-channel [cmd arg]))))))
+
+(defn process-commands [state ui-channel]
+  (let [main-channel (chan)]
+    (process-anytime-commands state ui-channel main-channel)
+    (process-main-commands state main-channel)
+    (periodically-send ui-channel [:reload-file])))
+

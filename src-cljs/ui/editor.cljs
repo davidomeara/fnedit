@@ -98,7 +98,7 @@
 
     (reagent/create-class
       {:reagent-render
-       (fn [opened-file channel]
+       (fn []
          [:div {:style {:position "absolute"
                         :width "100%"
                         :height "100%"}}])

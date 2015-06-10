@@ -63,13 +63,13 @@
     [:span]))
 
 (defn ok [state channel]
-  [choice state [:ok widgets/positive-button "OK"] channel])
+  [choice state [[:ok] widgets/positive-button "OK"] channel])
 
 (defn yes-no [state channel]
-  [choice state [:yes widgets/positive-button "Yes"
-                 :no widgets/negative-button "No"] channel])
+  [choice state [[:yes] widgets/positive-button "Yes"
+                 [:no] widgets/negative-button "No"] channel])
 
 (defn yes-no-cancel [state channel]
-  [choice state [:yes widgets/positive-button "Yes"
-                 :no widgets/negative-button "No"
-                 :cancel widgets/negative-button "Cancel"] channel])
+  [choice state [[:yes] widgets/positive-button "Yes"
+                 [:no] widgets/negative-button "No"
+                 [:cancel] widgets/negative-button "Cancel"] channel])
