@@ -8,6 +8,7 @@
 (def button-style
   {:flex-grow 0
    :flex-shrink 0
+   :margin 0
    :border "1px solid transparent"
    :text-align "center"
    :line-height "24px"

@@ -31,7 +31,8 @@
        :cursor "default"}]
 
      [:.button
-      {:padding "2px 5px 4px 5px"
+      {:margin "2px"
+       :padding "2px 5px 4px 5px"
        :color (:color style)
        :border "1px solid transparent"}]
      [:.button:hover :.button:focus
