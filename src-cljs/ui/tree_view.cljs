@@ -11,24 +11,24 @@
                               :padding-left (str (+ 5 (* 8 depth)) "px")}})
    txt])
 
-(defn file-div-style [opened?]
+(defn file-div-style [style opened?]
   {:padding-left "18px"
    :cursor "default"
-   :color (if opened? "white" "#222")
-   :background-color (if opened? "#007aff" "transparent")})
+   :color (if opened? (:active-color style) (:color style))
+   :background-color (if opened? (:active style) "transparent")})
 
-(defn file-div [depth {:keys [path name]} opened-file channel]
-  [:div.font.unselectable
-   {:style (file-div-style (= path (:path opened-file)))}
+(defn file-div [style depth {:keys [path name]} opened-file channel]
+  [:div.unselectable
+   {:style (file-div-style style (= path (:path opened-file)))}
    [padded-div depth name
     {:on-click #(events/stop-event % (fn [] (put! channel [:open-file path])))}]])
 
 (defn dir-div
-  [depth [{:keys [path name]} {:keys [directories files]}] open-directories opened-file channel]
+  [style depth [{:keys [path name]} {:keys [directories files]}] open-directories opened-file channel]
 
-  [:div.font.unselectable
+  [:div.unselectable
    {:style {:cursor "default"
-            :color "#222"
+            :color (:color style)
             :background-color "transparent"}}
 
    [padded-div depth
@@ -44,13 +44,13 @@
 
    (let [directory (sort-by #(:name (key %)) directories)]
      (for [directory directories]
-       ^{:key (key directory)} [dir-div (inc depth) directory open-directories opened-file channel]))
+       ^{:key (key directory)} [dir-div style (inc depth) directory open-directories opened-file channel]))
 
    (let [files (sort-by :name files)]
      (for [file files]
-       ^{:key file} [file-div (inc depth) file opened-file channel]))])
+       ^{:key file} [file-div style (inc depth) file opened-file channel]))])
 
-(defn tree-view [root open-directories opened-file channel]
+(defn tree-view [style root open-directories opened-file channel]
   [:div.unselectable
    {:style {:flex-grow 1
             :display "flex"
@@ -66,4 +66,4 @@
                    :min-width "100%"}}
      (let [roots (sort-by #(:name (key %)) root)]
        (for [root roots]
-         ^{:key (key root)} [dir-div 1 root open-directories opened-file channel]))]]])
+         ^{:key (key root)} [dir-div style 1 root open-directories opened-file channel]))]]])

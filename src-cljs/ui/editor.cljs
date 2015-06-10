@@ -7,18 +7,18 @@
             [ui.events :as events]
             [ui.debug :as debug]))
 
-(def line-widget-style
+(defn line-widget-style [style]
   {:overflow-x "auto"
    :overflow-y "hidden"
    :margin "calc(0.5em - 3px)"
    :padding "0.5em"
-   :background-color "#f7f7f7"
-   :border "1px solid #dddddd"
+   :background-color (:background style)
+   :border (str "1px solid " (:border-a style))
    :white-space "pre"})
 
-(defn line-widget [value]
+(defn line-widget [style value]
   (let [div (.createElement js/document "div")]
-    (->> [:div {:style line-widget-style} value]
+    (->> [:div {:style (line-widget-style style)} value]
       reagent/render-to-static-markup
       (set! (.-innerHTML div)))
     (.-firstChild div)))
@@ -31,13 +31,13 @@
         (doseq [i (range (alength widgets))]
           (.clear (aget widgets i)))))))
 
-(defn add-line-widget [cm to value]
+(defn add-line-widget [style cm to value]
   (when (not-empty value)
     (let [doc (.-doc cm)
           to-pos (.posFromIndex doc to)
           line (.-line to-pos)
           line-handle (.getLineHandle doc line)
-          div (line-widget value)]
+          div (line-widget style value)]
       (.addLineWidget cm line-handle div))))
 
 (defn widgets-height [cm cursor]
@@ -50,12 +50,12 @@
       .-handle
       .-widgets)))
 
-(defn evaluate-script-results [cm results]
+(defn evaluate-script-results [style cm results]
   (.operation cm
     (fn []
       (clear-line-widgets cm)
       (doseq [[[_ to] v] (sort-by #(first (first %)) results)]
-        (add-line-widget cm to v)))))
+        (add-line-widget style cm to v)))))
 
 (defn get-cm [this]
   (-> this reagent/dom-node .-lastChild .-CodeMirror))
@@ -87,7 +87,7 @@
           (count-inserted c)
           (-> doc (.indexFromPos (.-to c)))]]))))
 
-(defn make-editor [opened-file channel]
+(defn make-editor [_ opened-file channel]
   (let [cached-results (atom nil)
         before-change (make-on-before-change channel)
         change #(put! channel [:change (-> %1 .-doc .getValue)])
@@ -103,11 +103,11 @@
                         :width "100%"
                         :height "100%"}}])
        :component-will-update
-       (fn [this [_ opened-file channel]]
+       (fn [this [_ style opened-file channel]]
          (let [cm (get-cm this)
                results (:results opened-file)]
            (when (not= results @cached-results)
-             (evaluate-script-results cm results)
+             (evaluate-script-results style cm results)
              (reset! cached-results results))
            (.refresh cm)))
        :component-did-update
@@ -143,11 +143,11 @@
            (.off cm "focus" on-focus)
            (.off cm "blur" on-blur)))})))
 
-(defn editor [opened-file channel]
+(defn editor [style opened-file channel]
   [:div {:style {:display "flex"
                  :flex-grow 1
                  :position "relative"}}
    (when opened-file
      (let [coll [opened-file]]
        (for [x coll]
-         ^{:key (:id x)} [make-editor opened-file channel])))])
+         ^{:key (:id x)} [make-editor style opened-file channel])))])

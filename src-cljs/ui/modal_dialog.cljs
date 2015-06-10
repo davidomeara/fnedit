@@ -24,8 +24,8 @@
                  :flex-direction "column"
                  :justify-content "flex-start"
                  :align-items "center"}}
-        [:div.font
-         {:style {:color "#222"
+        [:div
+         {:style {:color "black"
                   :background-color "white"
                   :z-index (swap! z-count inc)
                   :margin-top "100px"

@@ -25,7 +25,7 @@
         unhover (fn [] (when-let [s (:status options)] (put! channel [:unhover])))
         action (fn [] (put! channel (:action options)) nil)]
     (if (:enabled? options)
-      [:a.unselectable.button.font
+      [:a.unselectable.button
        {:tabIndex (:tab-index options)
         :on-focus (fn [] (when-let [s (:status options)] (put! channel [:focus s])) nil)
         :on-blur blur
@@ -35,7 +35,7 @@
         :on-key-down (key-down (fn [] (unhover) (blur) (action)))
         :style (merge (:style options) {:display "inline-block" :cursor "pointer"})}
        title]
-      [:a.unselectable.button.font
+      [:a.unselectable.button
        {:tabIndex (:tab-index options)
         :style (merge (:style options) {:display "inline-block"
                                         :color "#999"

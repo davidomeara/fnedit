@@ -16,14 +16,14 @@
 
 (def icon-style {:style {:font-size "18px"}})
 
-(defn toolbar [opened channel]
+(defn toolbar [style opened channel]
   [:div.unselectable
    {:style {:flex-grow 0
             :flex-shrink 0
             :display "flex"
             :flex-direction "row"
-            :background-color "#f7f7f7"
-            :border-bottom "1px solid #999"}}
+            :background-color (:background style)
+            :border-bottom (str "1px solid " (:border-b style))}}
 
    [:div {:style {:display "flex"
                   :flex-direction "row"

@@ -14,7 +14,26 @@
 
 (def initial-state
   {:splitter {:min-left-width 120
-              :left-width 120}})
+              :left-width 120}
+   :style style/default-style})
+
+(defn status [style hover focus]
+  [:div.unselectable
+   {:style {:background-color (:background style)
+            :padding "4px"
+            :line-height "1.2em"
+            :min-height "1.2em"
+            :border-top (str "solid 1px " (:border-b style))
+            :display "inline-block"}}
+   (if-let [h hover] h focus)])
+
+(defn state-viewer [style state]
+  [:pre
+   {:style {:height "50%"
+            :margin 0
+            :overflow "auto"
+            :border-top (str "solid 1px " (:border-b style))}}
+   (debug/stringify state)])
 
 (defn main-component [state channel debug]
   [:div
@@ -24,12 +43,14 @@
             :bottom 0
             :left 0
             :display "flex"
-            :flex-direction "column"}}
+            :flex-direction "column"
+            :font-family (:font-family (:style state))
+            :font-size (:font-size (:style state))}}
    [:div
     {:style {:display "flex"
              :flex-direction "column"
              :flex-grow 1}}
-    [toolbar (:opened-file state) channel]
+    [toolbar (:style state) (:opened-file state) channel]
     [modal-dialog/yes-no (:delete-file state) channel]
     [modal-dialog/ok (:open-root-directory state) channel]
     [modal-dialog/ok (:open-file state) channel]
@@ -37,30 +58,10 @@
     [modal-dialog/yes-no-cancel (:close-file state) channel]
     [modal-dialog/yes-no (:reloaded-file state) channel]
     [hsplitter (:splitter state) channel
-     [tree-view (:root state) (:open-directories state) (:opened-file state) channel]
-     [editor (:opened-file state) channel]]
-    [:div.font.unselectable
-     {:style {:background-color "#f7f7f7"
-              :padding "4px"
-              :line-height "1.2em"
-              :min-height "1.2em"
-              :border-top "solid 1px #999"
-              :display "inline-block"}}
-     (if-let [h (:hover state)] h (:focus state))]]
-   (when debug
-     [(fn []
-        [:pre
-         {:style {:height "50%"
-                  :margin 0
-                  :overflow "auto"
-                  :border-top "solid 1px #999"}}
-         (debug/stringify state)])])])
-
-
-(defn render-style [debug]
-  (reagent/render
-    [:style (style/css debug)]
-    (.getElementById js/document "style")))
+     [tree-view (:style state) (:root state) (:open-directories state) (:opened-file state) channel]
+     [editor (:style state) (:opened-file state) channel]]
+    [status (:style state) (:hover state) (:focus state)]]
+   (when debug [state-viewer (:style state) state])])
 
 (defn main [debug]
   (when debug
@@ -82,7 +83,9 @@
       (events/make-keydown channel)
       true)
 
-    (render-style debug)
+    (reagent/render
+      [(fn [s] [:style (style/css (:style @s) debug)]) state]
+      (.getElementById js/document "style"))
 
     (reagent/render
       [(fn [s] [main-component @s channel debug]) state]
