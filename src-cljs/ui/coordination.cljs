@@ -263,7 +263,8 @@
     (let [[action [client-x]] (<! channel)]
       (case [drag-state action]
         [:drag :move] (recur (set-left-width! state client-x))
-        nil))))
+        [:drag :up] nil
+        (recur drag-state)))))
 
 (defn- path-or-name [opened-file]
   (if-let [path (:path opened-file)]
