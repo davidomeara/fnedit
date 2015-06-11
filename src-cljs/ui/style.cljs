@@ -1,7 +1,7 @@
 (ns ui.style
   (:require [garden.core :as g]))
 
-(def default-style
+(def default-theme
   {:color            "black"
    :background       "#f7f7f7"   ; light gray
    :border-a         "#dddddd"   ; gray

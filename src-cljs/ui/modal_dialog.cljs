@@ -40,7 +40,7 @@
 
 (defn choice
   "state {:caption string :exception string} choices {key button-type button-name-string}"
-  [style state choices channel]
+  [theme state choices channel]
   (if state
     [dialog
      [:div.unselectable
@@ -58,18 +58,18 @@
          (partition 3)
          (map-indexed
            (fn [tab-index [key button-type caption]]
-             ^{:key tab-index} [button-type style channel key caption {:tab-index (inc tab-index)}]))
+             ^{:key tab-index} [button-type theme channel key caption {:tab-index (inc tab-index)}]))
          reverse)]]]
     [:span]))
 
-(defn ok [style state channel]
-  [choice style state [:ok widgets/positive-button "OK"] channel])
+(defn ok [theme state channel]
+  [choice theme state [:ok widgets/positive-button "OK"] channel])
 
-(defn yes-no [style state channel]
-  [choice style state [:yes widgets/positive-button "Yes"
+(defn yes-no [theme state channel]
+  [choice theme state [:yes widgets/positive-button "Yes"
                        :no widgets/negative-button "No"] channel])
 
-(defn yes-no-cancel [style state channel]
-  [choice style state [:yes widgets/positive-button "Yes"
+(defn yes-no-cancel [theme state channel]
+  [choice theme state [:yes widgets/positive-button "Yes"
                        :no widgets/negative-button "No"
                        :cancel widgets/negative-button "Cancel"] channel])

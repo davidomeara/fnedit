@@ -14,7 +14,7 @@
         mouse-up (fn [e] (put! channel [:up nil]) nil)]
     (reagent/create-class
      {:reagent-render
-      (fn [style state _ left right]
+      (fn [theme state _ left right]
         [:div
          {:on-mouse-move mouse-move
           :style {:flex-grow 1
@@ -42,7 +42,7 @@
            {:style {:flex-grow 1
                     :width "1px"
                     :margin "0 4px 0 4px"
-                    :background-color (:border-b style)}}]]
+                    :background-color (:border-b theme)}}]]
          [:div
           {:style {:flex-grow 1
                    :flex-shrink 0

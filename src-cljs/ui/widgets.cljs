@@ -35,7 +35,7 @@
     :status=nil           When not nil, set as focus using the channel."
   [_ _ _ _ _]
   (let [state (reagent/atom {:active? false :hover? false :focus? false})]
-    (fn [style channel key title button-options]
+    (fn [theme channel key title button-options]
       (let [options (merge {:tab-index -1 :enabled? true} button-options)
             activate (fn [] (when (:enabled? options) (swap! state assoc :active? true)) nil)
             disactivate (fn [] (swap! state assoc :active? false) nil)
@@ -73,9 +73,9 @@
                     :cursor "pointer"
                     :margin "2px"
                     :padding "2px 5px 4px 5px"
-                    :color (:color style)
+                    :color (:color theme)
                     :border "1px solid transparent"}
-                   (button-style style (:enabled? options) @state)
+                   (button-style theme (:enabled? options) @state)
                    (:style options))}
          [:div {:style {:display "none"}} (debug/stringify @state)]
          title]))))
@@ -90,25 +90,25 @@
 
 (def icon-style {:style {:margin-right "5px"}})
 
-(defn standard-button [style channel key title options]
+(defn standard-button [theme channel key title options]
   [button
-   style
+   theme
    channel
    key
    title
    (merge options {:style (merge (:style options) standard-button-style)})])
 
-(defn positive-button [style channel key caption options]
+(defn positive-button [theme channel key caption options]
   [standard-button
-   style
+   theme
    channel
    key
    [:span [:i.icon.ion-checkmark icon-style] caption]
    options])
 
-(defn negative-button [style channel key caption options]
+(defn negative-button [theme channel key caption options]
   [standard-button
-   style
+   theme
    channel
    key
    [:span [:i.icon.ion-close icon-style] caption]

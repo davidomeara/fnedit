@@ -15,24 +15,24 @@
 (def initial-state
   {:splitter {:min-left-width 120
               :left-width 120}
-   :style style/default-style})
+   :theme style/default-theme})
 
-(defn status [style hover focus]
+(defn status [theme hover focus]
   [:div.unselectable
-   {:style {:background-color (:background style)
+   {:style {:background-color (:background theme)
             :padding "4px"
             :line-height "1.2em"
             :min-height "1.2em"
-            :border-top (str "solid 1px " (:border-b style))
+            :border-top (str "solid 1px " (:border-b theme))
             :display "inline-block"}}
    (if-let [h hover] h focus)])
 
-(defn state-viewer [style state]
+(defn state-viewer [theme state]
   [:pre
    {:style {:height "50%"
             :margin 0
             :overflow "auto"
-            :border-top (str "solid 1px " (:border-b style))}}
+            :border-top (str "solid 1px " (:border-b theme))}}
    (debug/stringify state)])
 
 (defn main-component [state channel debug]
@@ -44,24 +44,24 @@
             :left 0
             :display "flex"
             :flex-direction "column"
-            :font-family (:font-family (:style state))
-            :font-size (:font-size (:style state))}}
+            :font-family (:font-family (:theme state))
+            :font-size (:font-size (:theme state))}}
    [:div
     {:style {:display "flex"
              :flex-direction "column"
              :flex-grow 1}}
-    [toolbar (:style state) (:opened-file state) channel]
-    [modal-dialog/yes-no (:style state) (:delete-file state) channel]
-    [modal-dialog/ok (:style state) (:open-root-directory state) channel]
-    [modal-dialog/ok (:style state) (:open-file state) channel]
-    [modal-dialog/ok (:style state) (:save-file state) channel]
-    [modal-dialog/yes-no-cancel (:style state) (:close-file state) channel]
-    [modal-dialog/yes-no (:style state) (:reloaded-file state) channel]
-    [hsplitter (:style state) (:splitter state) channel
-     [tree-view (:style state) (:root state) (:open-directories state) (:opened-file state) channel]
-     [editor (:style state) (:opened-file state) channel]]
-    [status (:style state) (:hover state) (:focus state)]]
-   (when debug [state-viewer (:style state) state])])
+    [toolbar (:theme state) (:opened-file state) channel]
+    [modal-dialog/yes-no (:theme state) (:delete-file state) channel]
+    [modal-dialog/ok (:theme state) (:open-root-directory state) channel]
+    [modal-dialog/ok (:theme state) (:open-file state) channel]
+    [modal-dialog/ok (:theme state) (:save-file state) channel]
+    [modal-dialog/yes-no-cancel (:theme state) (:close-file state) channel]
+    [modal-dialog/yes-no (:theme state) (:reloaded-file state) channel]
+    [hsplitter (:theme state) (:splitter state) channel
+     [tree-view (:theme state) (:root state) (:open-directories state) (:opened-file state) channel]
+     [editor (:theme state) (:opened-file state) channel]]
+    [status (:theme state) (:hover state) (:focus state)]]
+   (when debug [state-viewer (:theme state) state])])
 
 (defn main [debug]
   (when debug
@@ -84,8 +84,8 @@
       true)
 
     (reagent/render
-      [(fn [s] [:style (style/css (:style @s) debug)]) state]
-      (.getElementById js/document "style"))
+      [(fn [s] [:style (style/css (:theme @s) debug)]) state]
+      (.getElementById js/document "theme"))
 
     (reagent/render
       [(fn [s] [main-component @s channel debug]) state]

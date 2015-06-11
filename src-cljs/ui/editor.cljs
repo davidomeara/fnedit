@@ -103,11 +103,11 @@
                         :width "100%"
                         :height "100%"}}])
        :component-will-update
-       (fn [this [_ style opened-file channel]]
+       (fn [this [_ theme opened-file channel]]
          (let [cm (get-cm this)
                results (:results opened-file)]
            (when (not= results @cached-results)
-             (evaluate-script-results style cm results)
+             (evaluate-script-results theme cm results)
              (reset! cached-results results))
            (.refresh cm)))
        :component-did-update
@@ -143,11 +143,11 @@
            (.off cm "focus" on-focus)
            (.off cm "blur" on-blur)))})))
 
-(defn editor [style opened-file channel]
+(defn editor [theme opened-file channel]
   [:div {:style {:display "flex"
                  :flex-grow 1
                  :position "relative"}}
    (when opened-file
      (let [coll [opened-file]]
        (for [x coll]
-         ^{:key (:id x)} [make-editor style opened-file channel])))])
+         ^{:key (:id x)} [make-editor theme opened-file channel])))])
