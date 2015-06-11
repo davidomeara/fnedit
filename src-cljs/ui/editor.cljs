@@ -87,7 +87,7 @@
           (count-inserted c)
           (-> doc (.indexFromPos (.-to c)))]]))))
 
-(defn make-editor [_ opened-file channel]
+(defn make-editor [channel _ opened-file]
   (let [cached-results (atom nil)
         before-change (make-on-before-change channel)
         change #(put! channel [:change (-> %1 .-doc .getValue)])
@@ -103,7 +103,7 @@
                         :width "100%"
                         :height "100%"}}])
        :component-will-update
-       (fn [this [_ theme opened-file channel]]
+       (fn [this [_ channel theme opened-file]]
          (let [cm (get-cm this)
                results (:results opened-file)]
            (when (not= results @cached-results)
@@ -143,11 +143,11 @@
            (.off cm "focus" on-focus)
            (.off cm "blur" on-blur)))})))
 
-(defn editor [theme opened-file channel]
+(defn editor [channel theme opened-file]
   [:div {:style {:display "flex"
                  :flex-grow 1
                  :position "relative"}}
    (when opened-file
      (let [coll [opened-file]]
        (for [x coll]
-         ^{:key (:id x)} [make-editor theme opened-file channel])))])
+         ^{:key (:id x)} [make-editor channel theme opened-file])))])

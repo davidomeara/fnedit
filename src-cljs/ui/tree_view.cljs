@@ -17,14 +17,14 @@
    :color (if opened? (:active-color theme) (:color theme))
    :background-color (if opened? (:active theme) "transparent")})
 
-(defn file-div [theme depth {:keys [path name]} opened-file channel]
+(defn file-div [channel theme depth {:keys [path name]} opened-file]
   [:div.unselectable
    {:style (file-div-style theme (= path (:path opened-file)))}
    [padded-div depth name
     {:on-click #(events/stop-event % (fn [] (put! channel [:open-file path])))}]])
 
 (defn dir-div
-  [theme depth [{:keys [path name]} {:keys [directories files]}] open-directories opened-file channel]
+  [channel theme depth [{:keys [path name]} {:keys [directories files]}] open-directories opened-file]
 
   [:div.unselectable
    {:style {:cursor "default"
@@ -44,13 +44,13 @@
 
    (let [directory (sort-by #(:name (key %)) directories)]
      (for [directory directories]
-       ^{:key (key directory)} [dir-div theme (inc depth) directory open-directories opened-file channel]))
+       ^{:key (key directory)} [dir-div channel theme (inc depth) directory open-directories opened-file]))
 
    (let [files (sort-by :name files)]
      (for [file files]
-       ^{:key file} [file-div theme (inc depth) file opened-file channel]))])
+       ^{:key file} [file-div channel theme (inc depth) file opened-file]))])
 
-(defn tree-view [theme root open-directories opened-file channel]
+(defn tree-view [channel theme root open-directories opened-file]
   [:div.unselectable
    {:style {:flex-grow 1
             :display "flex"
@@ -66,4 +66,4 @@
                    :min-width "100%"}}
      (let [roots (sort-by #(:name (key %)) root)]
        (for [r roots]
-         ^{:key (key r)} [dir-div theme 1 r open-directories opened-file channel]))]]])
+         ^{:key (key r)} [dir-div channel theme 1 r open-directories opened-file]))]]])

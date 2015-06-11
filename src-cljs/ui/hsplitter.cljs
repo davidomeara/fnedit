@@ -8,13 +8,13 @@
 (defn client-x-width [e]
   [(.-clientX e) (-> e .-currentTarget .-clientWidth)])
 
-(defn hsplitter [_ _ channel _ _]
+(defn hsplitter [channel _ _ _ _]
   (let [mouse-down (fn [e] (events/stop-event e #(put! channel [:splitter-down nil])))
         mouse-move (fn [e] (put! channel [:move (client-x-width e)]) nil)
         mouse-up (fn [e] (put! channel [:up nil]) nil)]
     (reagent/create-class
      {:reagent-render
-      (fn [theme state _ left right]
+      (fn [_ theme state left right]
         [:div
          {:on-mouse-move mouse-move
           :style {:flex-grow 1

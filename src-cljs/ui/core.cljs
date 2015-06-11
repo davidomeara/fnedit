@@ -35,7 +35,7 @@
             :border-top (str "solid 1px " (:border-b theme))}}
    (debug/stringify state)])
 
-(defn main-component [state channel debug]
+(defn main-component [channel state debug]
   [:div
    {:style {:position "fixed"
             :top 0
@@ -50,16 +50,16 @@
     {:style {:display "flex"
              :flex-direction "column"
              :flex-grow 1}}
-    [toolbar (:theme state) (:opened-file state) channel]
-    [modal-dialog/yes-no (:theme state) (:delete-file state) channel]
-    [modal-dialog/ok (:theme state) (:open-root-directory state) channel]
-    [modal-dialog/ok (:theme state) (:open-file state) channel]
-    [modal-dialog/ok (:theme state) (:save-file state) channel]
-    [modal-dialog/yes-no-cancel (:theme state) (:close-file state) channel]
-    [modal-dialog/yes-no (:theme state) (:reloaded-file state) channel]
-    [hsplitter (:theme state) (:splitter state) channel
-     [tree-view (:theme state) (:root state) (:open-directories state) (:opened-file state) channel]
-     [editor (:theme state) (:opened-file state) channel]]
+    [toolbar channel (:theme state) (:opened-file state)]
+    [modal-dialog/yes-no channel (:theme state) (:delete-file state)]
+    [modal-dialog/ok channel (:theme state) (:open-root-directory state)]
+    [modal-dialog/ok channel (:theme state) (:open-file state)]
+    [modal-dialog/ok channel (:theme state) (:save-file state)]
+    [modal-dialog/yes-no-cancel channel (:theme state) (:close-file state)]
+    [modal-dialog/yes-no channel (:theme state) (:reloaded-file state)]
+    [hsplitter channel (:theme state) (:splitter state)
+     [tree-view channel (:theme state) (:root state) (:open-directories state) (:opened-file state)]
+     [editor channel (:theme state) (:opened-file state)]]
     [status (:theme state) (:hover state) (:focus state)]]
    (when debug [state-viewer (:theme state) state])])
 
@@ -88,7 +88,7 @@
       (.getElementById js/document "theme"))
 
     (reagent/render
-      [(fn [s] [main-component @s channel debug]) state]
+      [(fn [s] [main-component channel @s debug]) state]
       (.getElementById js/document "root"))))
 
 (main (clr/sync-eval (str '(core.clojure-clr-wrapper/is-debug))))

@@ -17,7 +17,7 @@
 
 (def icon-style {:style {:font-size "18px"}})
 
-(defn toolbar [theme opened channel]
+(defn toolbar [channel theme opened]
   [:div.unselectable
    {:style {:flex-grow 0
             :flex-shrink 0
@@ -30,16 +30,16 @@
                   :flex-direction "row"
                   :justify-content "flex-start"}}
     [button
-     theme
      channel
+     theme
      :open-root-directory
      [:i.icon.ion-ios-folder-outline icon-style]
      {:style button-style
       :status "Open folder (Ctrl+O)"}]
 
     [button
-     theme
      channel
+     theme
      :new
      [:i.icon.ion-ios-compose-outline icon-style]
      {:style button-style
@@ -50,8 +50,8 @@
                   :justify-content "flex-end"
                   :flex-grow 1}}
     [button
-     theme
      channel
+     theme
      :delete
      [:i.icon.ion-ios-trash-outline icon-style]
      {:style button-style
@@ -59,8 +59,8 @@
       :status "Delete opened file"}]
 
     [button
-     theme
      channel
+     theme
      :save
      [:i.icon.ion-ios-download-outline icon-style]
      {:style button-style
@@ -68,8 +68,8 @@
       :status "Save opened file (Ctrl+S)"}]
 
     [button
-     theme
      channel
+     theme
      :evaluate-form
      [:span "(...)"]
      {:style button-style
@@ -77,8 +77,8 @@
       :status "Eval top level forms that fall within the selection (Ctrl+Space)"}]
 
     [button
-     theme
      channel
+     theme
      :evaluate-script
      [:i.icon.ion-ios-arrow-thin-down icon-style]
      {:style button-style
