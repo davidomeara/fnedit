@@ -10,35 +10,75 @@
       (f))
     nil))
 
+(defn button-style [style enabled? {:keys [active? hover? focus?]}]
+  (if enabled?
+    (if active?
+      {:color (:active-color style)
+       :background-color (:active style)
+       :border (str "1px solid " (:active style))}
+      (if (or hover? focus?)
+        {:color (:active style)
+         :border (str "1px solid " (:active style))}
+        {}))
+    {:cursor "default"
+     :color (:border-b style)
+     :border "1px solid transparent"}))
+
 (defn button
   "required
-    channel, title
+    style, channel, title
    optional [key=default]
     :tab-index=-1
     :style=nil
     :enabled?=true
     :action=nil           When not nil, sent to channel on click or focus enter.
     :status=nil           When not nil, set as focus using the channel."
-  [style channel title button-options]
-  (let [options (merge {:tab-index -1 :enabled? true} button-options)
-        action (fn [] (put! channel (:action options)) nil)]
-    (if (:enabled? options)
-      [:a.unselectable.button
-       {:tabIndex (:tab-index options)
-        :on-focus (fn [] (when-let [s (:status options)] (put! channel [:focus s])) nil)
-        :on-blur (fn [] (when-let [s (:status options)] (put! channel [:blur])) nil)
-        :on-mouse-enter (fn [] (when-let [s (:status options)] (put! channel [:hover s])) nil)
-        :on-mouse-leave (fn [] (when-let [s (:status options)] (put! channel [:unhover])))
-        :on-click action
-        :on-key-down (key-down action)
-        :style (merge (:style options) {:display "inline-block" :cursor "pointer"})}
-       title]
-      [:a.unselectable.button
-       {:tabIndex (:tab-index options)
-        :style (merge (:style options) {:display "inline-block"
-                                        :color (:border-b style)
-                                        :border "1px solid transparent"})}
-       title])))
+  [_ _ t button-options]
+  (let [state (reagent/atom {:active? false :hover? false :focus? false})]
+    (fn [style channel title button-options]
+      (let [options (merge {:tab-index -1 :enabled? true} button-options)
+            activate (fn [] (when (:enabled? options) (swap! state assoc :active? true)) nil)
+            disactivate (fn [] (swap! state assoc :active? false) nil)
+            action (fn [] (when (:enabled? options) (put! channel (:action options))) nil)]
+        [:a.unselectable
+         {:tabIndex (:tab-index options)
+          :on-focus (fn []
+                      (when-let [s (:status options)]
+                        (put! channel [:focus s]))
+                      (swap! state assoc :focus? true)
+                      nil)
+          :on-blur (fn []
+                     (when-let [s (:status options)]
+                       (put! channel [:blur]))
+                     (swap! state assoc :focus? false)
+                     (disactivate)
+                     nil)
+          :on-mouse-enter (fn []
+                            (when-let [s (:status options)]
+                              (put! channel [:hover s]))
+                            (swap! state assoc :hover? true)
+                            nil)
+          :on-mouse-down activate
+          :on-mouse-leave (fn []
+                            (when-let [s (:status options)]
+                              (put! channel [:unhover]))
+                            (swap! state assoc :hover? false)
+                            (disactivate)
+                            nil)
+          :on-mouse-up (fn [] (action) (disactivate))
+          :on-key-down activate
+          :on-key-up (key-down (fn [_] (action) (disactivate)))
+          :style (merge
+                   {:display "inline-block"
+                    :cursor "pointer"
+                    :margin "2px"
+                    :padding "2px 5px 4px 5px"
+                    :color (:color style)
+                    :border "1px solid transparent"}
+                   (button-style style (:enabled? options) @state)
+                   (:style options))}
+         [:div {:style {:display "none"}} (debug/stringify @state)]
+         title]))))
 
 (def standard-widget-style
   {:display "inline-block"

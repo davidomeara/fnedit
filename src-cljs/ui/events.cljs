@@ -29,7 +29,6 @@
     (into #{})))
 
 (defn key-combination
-  "Normalizes "
   [e]
   {:key-code (.-keyCode e)
    :modifiers (modifier-set e)})

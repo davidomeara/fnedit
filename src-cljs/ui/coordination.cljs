@@ -284,6 +284,8 @@
           :new (<! (new-file state channel))
           :delete (<! (delete-file-dialog state channel))
           :save (<! (save state channel))
+          :evaluate-form (swap! state evaluate-form)
+          :evaluate-script (swap! state evaluate-script)
 
           ; tree
           :toggle-open-directory (<! (toggle-open-directory state channel arg))
@@ -293,8 +295,6 @@
           :reload-file (<! (reload-file state channel))
 
           ; file
-          :evaluate-form (swap! state evaluate-form)
-          :evaluate-script (swap! state evaluate-script)
           :before-change (swap! state data/shift-results arg)
           :change (swap! state data/update-text arg)
           :cursor-selection (swap! state data/update-cursor-selection arg)
