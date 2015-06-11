@@ -310,11 +310,12 @@
       (let [[cmd arg] (<! ui-channel)]
         (case cmd
           ; status
-          :blur (swap! state dissoc :focus)
           :hover (swap! state assoc :hover arg)
           :unhover (swap! state dissoc :hover)
+
           :focus (swap! state assoc :focus arg)
           :focus-editor (swap! state assoc :focus (edit-file-status @state))
+          :blur (swap! state dissoc :focus)
 
           (>! main-channel [cmd arg]))))))
 

@@ -24,6 +24,7 @@
      :color (:border-b style)
      :border "1px solid transparent"}))
 
+; style channel key title
 (defn button
   "required
     style, channel, title
@@ -31,15 +32,14 @@
     :tab-index=-1
     :style=nil
     :enabled?=true
-    :action=nil           When not nil, sent to channel on click or focus enter.
     :status=nil           When not nil, set as focus using the channel."
-  [_ _ t button-options]
+  [_ _ _ _ _]
   (let [state (reagent/atom {:active? false :hover? false :focus? false})]
-    (fn [style channel title button-options]
+    (fn [style channel key title button-options]
       (let [options (merge {:tab-index -1 :enabled? true} button-options)
             activate (fn [] (when (:enabled? options) (swap! state assoc :active? true)) nil)
             disactivate (fn [] (swap! state assoc :active? false) nil)
-            action (fn [] (when (:enabled? options) (put! channel (:action options))) nil)]
+            action (fn [] (when (:enabled? options) (put! channel [key])) nil)]
         [:a.unselectable
          {:tabIndex (:tab-index options)
           :on-focus (fn []
@@ -90,23 +90,26 @@
 
 (def icon-style {:style {:margin-right "5px"}})
 
-(defn standard-button [style channel title options]
+(defn standard-button [style channel key title options]
   [button
    style
    channel
+   key
    title
    (merge options {:style (merge (:style options) standard-button-style)})])
 
-(defn positive-button [style channel caption options]
+(defn positive-button [style channel key caption options]
   [standard-button
    style
    channel
+   key
    [:span [:i.icon.ion-checkmark icon-style] caption]
    options])
 
-(defn negative-button [style channel caption options]
+(defn negative-button [style channel key caption options]
   [standard-button
    style
    channel
+   key
    [:span [:i.icon.ion-close icon-style] caption]
    options])

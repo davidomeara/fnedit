@@ -39,7 +39,7 @@
        (-> js/document .-activeElement .blur))}))
 
 (defn choice
-  "state {:caption string :exception string} choices {output-key button-type button-name-string}"
+  "state {:caption string :exception string} choices {key button-type button-name-string}"
   [style state choices channel]
   (if state
     [dialog
@@ -58,18 +58,18 @@
          (partition 3)
          (map-indexed
            (fn [tab-index [key button-type caption]]
-             ^{:key tab-index} [button-type style channel caption {:tab-index (inc tab-index) :action key}]))
+             ^{:key tab-index} [button-type style channel key caption {:tab-index (inc tab-index)}]))
          reverse)]]]
     [:span]))
 
 (defn ok [style state channel]
-  [choice style state [[:ok] widgets/positive-button "OK"] channel])
+  [choice style state [:ok widgets/positive-button "OK"] channel])
 
 (defn yes-no [style state channel]
-  [choice style state [[:yes] widgets/positive-button "Yes"
-                 [:no] widgets/negative-button "No"] channel])
+  [choice style state [:yes widgets/positive-button "Yes"
+                       :no widgets/negative-button "No"] channel])
 
 (defn yes-no-cancel [style state channel]
-  [choice style state [[:yes] widgets/positive-button "Yes"
-                 [:no] widgets/negative-button "No"
-                 [:cancel] widgets/negative-button "Cancel"] channel])
+  [choice style state [:yes widgets/positive-button "Yes"
+                       :no widgets/negative-button "No"
+                       :cancel widgets/negative-button "Cancel"] channel])

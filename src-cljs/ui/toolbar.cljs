@@ -32,17 +32,17 @@
     [button
      style
      channel
+     :open-root-directory
      [:i.icon.ion-ios-folder-outline icon-style]
      {:style button-style
-      :action [:open-root-directory]
       :status "Open folder (Ctrl+O)"}]
 
     [button
      style
      channel
+     :new
      [:i.icon.ion-ios-compose-outline icon-style]
      {:style button-style
-      :action [:new]
       :status "New file (Ctrl+N)"}]]
 
    [:div {:style {:display "flex"
@@ -52,35 +52,35 @@
     [button
      style
      channel
+     :delete
      [:i.icon.ion-ios-trash-outline icon-style]
      {:style button-style
       :enabled? (:path opened)
-      :action [:delete]
       :status "Delete opened file"}]
 
     [button
      style
      channel
+     :save
      [:i.icon.ion-ios-download-outline icon-style]
      {:style button-style
       :enabled? (:dirty? opened)
-      :action [:save]
       :status "Save opened file (Ctrl+S)"}]
 
     [button
      style
      channel
+     :evaluate-form
      [:span "(...)"]
      {:style button-style
       :enabled? (:cursor-selection opened)
-      :action [:evaluate-form]
       :status "Eval top level forms that fall within the selection (Ctrl+Space)"}]
 
     [button
      style
      channel
+     :evaluate-script
      [:i.icon.ion-ios-arrow-thin-down icon-style]
      {:style button-style
       :enabled? opened
-      :action [:evaluate-script]
       :status "Eval all forms in file (Ctrl+Shift+Space)"}]]])
