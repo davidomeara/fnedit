@@ -1,5 +1,4 @@
-(ns ui.style
-  (:require [garden.core :as g]))
+(ns ui.style)
 
 (def default-theme
   {:color            "black"
@@ -12,11 +11,3 @@
    :font-size        "12px"
    :code-font-family "Consolas, monospace"
    :code-font-size   "14px"})
-
-(defn css [style debug]
-  (g/css
-    {:pretty-print? debug}
-    [[:.CodeMirror
-      {:font-family "Consolas, monospace"
-       :font-size "14px"
-       :height "100%"}]]))

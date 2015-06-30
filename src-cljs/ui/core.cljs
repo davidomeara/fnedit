@@ -86,10 +86,6 @@
       true)
 
     (reagent/render
-      [(fn [] [:style (style/css (:theme @state) debug)])]
-      (.getElementById js/document "theme"))
-
-    (reagent/render
       [(fn [] [main-component channel @state debug])]
       (.getElementById js/document "root"))))
 

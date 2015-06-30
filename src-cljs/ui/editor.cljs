@@ -87,12 +87,11 @@
           (count-inserted c)
           (-> doc (.indexFromPos (.-to c)))]]))))
 
-(defn make-editor [channel _ opened-file]
+(defn make-editor [channel theme opened-file]
   (let [cached-results (atom nil)
         before-change (make-on-before-change channel)
         change #(put! channel [:change (-> %1 .-doc .getValue)])
         before-selection-change #(put! channel [:cursor-selection (cursor-selection %)])
-        focus #(.focus %)
         on-focus #(put! channel [:focus-editor])
         on-blur #(put! channel [:blur])]
 
@@ -113,7 +112,7 @@
        :component-did-update
        (fn [this]
          (let [cm (get-cm this)]
-           (focus cm)))
+           (.focus cm)))
        :component-did-mount
        (fn [this]
          (let [cm (js/CodeMirror.
@@ -127,13 +126,21 @@
                               :matchBrackets true
                               :placeholder placeholder-text
                               :mode "clojure",
-                              :theme "default"}))]
+                              :theme "default"}))
+               style (-> cm .getWrapperElement .-style)]
+
+           (set! (.-fontFamily style) (:code-font-family theme))
+           (set! (.-fontSize style) (:code-font-size theme))
+           (set! (.-height style) "100%")
+
            (.on cm "beforeChange" before-change)
            (.on cm "change" change)
            (.on cm "beforeSelectionChange" before-selection-change)
            (.on cm "focus" on-focus)
            (.on cm "blur" on-blur)
-           (focus cm)))
+
+           (.focus cm)
+           (.refresh cm)))
        :component-did-unmount
        (fn [this]
          (let [cm (get-cm this)]
