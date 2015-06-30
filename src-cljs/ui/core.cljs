@@ -14,42 +14,42 @@
 
 (def initial-state
   {:splitter {:min-left-width 120
-              :left-width 120}
-   :theme style/default-theme})
+              :left-width     120}
+   :theme    style/default-theme})
 
 (defn status [theme hover focus]
   [:div.unselectable
    {:style {:background-color (:background theme)
-            :padding "4px"
-            :line-height "1.2em"
-            :min-height "1.2em"
-            :border-top (str "solid 1px " (:border-b theme))
-            :display "inline-block"}}
+            :padding          "4px"
+            :line-height      "1.2em"
+            :min-height       "1.2em"
+            :border-top       (str "solid 1px " (:border-b theme))
+            :display          "inline-block"}}
    (if-let [h hover] h focus)])
 
 (defn state-viewer [theme state]
   [:pre
-   {:style {:height "50%"
-            :margin 0
-            :overflow "auto"
+   {:style {:height     "50%"
+            :margin     0
+            :overflow   "auto"
             :border-top (str "solid 1px " (:border-b theme))}}
    (debug/stringify state)])
 
 (defn main-component [channel state debug]
   [:div
-   {:style {:position "fixed"
-            :top 0
-            :right 0
-            :bottom 0
-            :left 0
-            :display "flex"
+   {:style {:position       "fixed"
+            :top            0
+            :right          0
+            :bottom         0
+            :left           0
+            :display        "flex"
             :flex-direction "column"
-            :font-family (:font-family (:theme state))
-            :font-size (:font-size (:theme state))}}
+            :font-family    (:font-family (:theme state))
+            :font-size      (:font-size (:theme state))}}
    [:div
-    {:style {:display "flex"
+    {:style {:display        "flex"
              :flex-direction "column"
-             :flex-grow 1}}
+             :flex-grow      1}}
     [toolbar channel (:theme state) (:opened-file state)]
     [modal-dialog/yes-no channel (:theme state) (:delete-file state)]
     [modal-dialog/ok channel (:theme state) (:open-root-directory state)]
@@ -84,11 +84,11 @@
       true)
 
     (reagent/render
-      [(fn [s] [:style (style/css (:theme @s) debug)]) state]
+      [(fn [] [:style (style/css (:theme @state) debug)])]
       (.getElementById js/document "theme"))
 
     (reagent/render
-      [(fn [s] [main-component channel @s debug]) state]
+      [(fn [] [main-component channel @state debug])]
       (.getElementById js/document "root"))))
 
 (main (clr/sync-eval (str '(core.clojure-clr-wrapper/is-debug))))

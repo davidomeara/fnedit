@@ -74,7 +74,7 @@
      [:span "(...)"]
      {:style button-style
       :enabled? (:cursor-selection opened)
-      :status "Eval top level forms that fall within the selection (Ctrl+Space)"}]
+      :status "Eval top level forms adjacent and within the selection (Ctrl+Enter)"}]
 
     [button
      channel
@@ -83,4 +83,4 @@
      [:i.icon.ion-ios-arrow-thin-down icon-style]
      {:style button-style
       :enabled? opened
-      :status "Eval all forms in file (Ctrl+Shift+Space)"}]]])
+      :status "Eval all forms in file (Ctrl+Shift+Enter)"}]]])
