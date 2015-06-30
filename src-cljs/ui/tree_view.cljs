@@ -18,7 +18,7 @@
    :background-color (if opened? (:active theme) "transparent")})
 
 (defn file-div [channel theme depth {:keys [path name]} opened-file]
-  [:div.unselectable
+  [:div
    {:style (file-div-style theme (= path (:path opened-file)))}
    [padded-div depth name
     {:on-click #(events/stop-event % (fn [] (put! channel [:open-file path])))}]])
@@ -26,7 +26,7 @@
 (defn dir-div
   [channel theme depth [{:keys [path name]} {:keys [directories files]}] open-directories opened-file]
 
-  [:div.unselectable
+  [:div
    {:style {:cursor "default"
             :color (:color theme)
             :background-color "transparent"}}
@@ -51,12 +51,12 @@
        ^{:key file} [file-div channel theme (inc depth) file opened-file]))])
 
 (defn tree-view [channel theme root open-directories opened-file]
-  [:div.unselectable
+  [:div
    {:style {:flex-grow 1
             :display "flex"
             :flex-direction "column"
             :background-color "#f5f2f1"}}
-   [:div.unselectable
+   [:div
     {:style {:flex-grow 1
              :overflow "auto"
              :white-space "nowrap"

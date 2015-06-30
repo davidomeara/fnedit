@@ -8,7 +8,8 @@
             [ui.debug :as debug]))
 
 (defn line-widget-style [style]
-  {:overflow-x "auto"
+  {:-webkit-user-select "text"
+   :overflow-x "auto"
    :overflow-y "hidden"
    :margin "calc(0.5em - 3px)"
    :padding "0.5em"

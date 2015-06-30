@@ -40,7 +40,7 @@
             activate (fn [] (when (:enabled? options) (swap! state assoc :active? true)) nil)
             disactivate (fn [] (swap! state assoc :active? false) nil)
             action (fn [] (when (:enabled? options) (put! channel [key])) nil)]
-        [:a.unselectable
+        [:a
          {:tabIndex (:tab-index options)
           :on-focus (fn []
                       (when-let [s (:status options)]
