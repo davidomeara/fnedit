@@ -18,7 +18,7 @@
 (def icon-style {:style {:font-size "18px"}})
 
 (defn toolbar [channel theme opened]
-  [:div.unselectable
+  [:div
    {:style {:flex-grow 0
             :flex-shrink 0
             :display "flex"

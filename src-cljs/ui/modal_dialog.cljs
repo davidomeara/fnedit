@@ -43,7 +43,7 @@
   [channel theme state choices]
   (if state
     [dialog
-     [:div.unselectable
+     [:div
       [:span {:style {:margin "2px"
                       :display "flex"
                       :flex-direction "row"}} (:caption state)]

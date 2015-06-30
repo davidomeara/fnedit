@@ -18,7 +18,7 @@
    :theme    style/default-theme})
 
 (defn status [theme hover focus]
-  [:div.unselectable
+  [:div
    {:style {:background-color (:background theme)
             :padding          "4px"
             :line-height      "1.2em"
@@ -37,7 +37,9 @@
 
 (defn main-component [channel state debug]
   [:div
-   {:style {:position       "fixed"
+   {:style {:-webkit-user-select "none"
+            :cursor         "default"
+            :position       "fixed"
             :top            0
             :right          0
             :bottom         0

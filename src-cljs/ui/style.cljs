@@ -19,8 +19,4 @@
     [[:.CodeMirror
       {:font-family "Consolas, monospace"
        :font-size "14px"
-       :height "100%"}]
-
-     [:.unselectable
-      {:-webkit-user-select "none"
-       :cursor "default"}]]))
+       :height "100%"}]]))
