@@ -92,7 +92,7 @@
   (let [cached-results (atom nil)
         before-change (make-on-before-change channel)
         change #(put! channel [:change (-> %1 .-doc .getValue)])
-        before-selection-change #(put! channel [:cursor-selection (cursor-selection %)])
+        cursor-activity #(put! channel [:cursor-selection (cursor-selection %)])
         on-focus #(put! channel [:focus-editor])
         on-blur #(put! channel [:blur])]
 
@@ -136,7 +136,7 @@
 
            (.on cm "beforeChange" before-change)
            (.on cm "change" change)
-           (.on cm "beforeSelectionChange" before-selection-change)
+           (.on cm "cursorActivity" cursor-activity)
            (.on cm "focus" on-focus)
            (.on cm "blur" on-blur)
 
@@ -147,7 +147,7 @@
          (let [cm (get-cm this)]
            (.off cm "beforeChange" before-change)
            (.off cm "change" change)
-           (.off cm "beforeSelectionChange" before-selection-change)
+           (.off cm "cursorActivity" cursor-activity)
            (.off cm "focus" on-focus)
            (.off cm "blur" on-blur)))})))
 
