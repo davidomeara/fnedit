@@ -21,9 +21,6 @@
        :font-size "14px"
        :height "100%"}]
 
-     [:input :a {:border 0}]
-     [:input:focus :a {:outline 0}]
-
      [:.unselectable
       {:-webkit-user-select "none"
        :cursor "default"}]]))

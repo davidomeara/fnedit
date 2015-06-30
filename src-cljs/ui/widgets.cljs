@@ -74,7 +74,8 @@
                     :margin "2px"
                     :padding "2px 5px 4px 5px"
                     :color (:color theme)
-                    :border "1px solid transparent"}
+                    :border "1px solid transparent"
+                    :outline 0}
                    (button-style theme (:enabled? options) @state)
                    (:style options))}
          [:div {:style {:display "none"}} (debug/stringify @state)]
