@@ -10,10 +10,10 @@
 
 (defn root-path [state]
   (->> state
-    :root
-    first
-    ((fn [[k v]] k))
-    :path))
+       :root
+       first
+       ((fn [[k v]] k))
+       :path))
 
 (defn- clj-extension? [name]
   (let [n (count name)]
@@ -41,7 +41,7 @@
 
 (defn- assoc-clj-validation-warning [s]
   (assoc-in s [:new-file :validation]
-    "The script must have the extension .clj"))
+            "The script must have the extension .clj"))
 
 (defn delete-file-dialog [state channel]
   (go
@@ -50,10 +50,10 @@
     (loop []
       (case (-> channel <! first)
         :yes (let [{:keys [exception]} (<! (clr/async-eval 'core.fs/delete (get-in @state [:opened-file :path])))]
-                     (if exception
-                       (do (swap! state assoc-in [:delete-file :exception] exception)
-                           (recur))
-                       (swap! state dissoc :opened-file)))
+               (if exception
+                 (do (swap! state assoc-in [:delete-file :exception] exception)
+                     (recur))
+                 (swap! state dissoc :opened-file)))
         :no nil
         (recur)))
     (swap! state dissoc :delete-file)
@@ -72,9 +72,9 @@
         [from to] (to-from-fn opened)
         text (:text opened)]
     (->> text
-      (clr/winforms-sync-eval (root-path state) from to)
-      (data/update-results state)
-      focus)))
+         (clr/winforms-sync-eval (root-path state) from to)
+         (data/update-results state)
+         focus)))
 
 (defn evaluate-script [state]
   (evaluate
@@ -91,7 +91,7 @@
   "Displays exception, returns false."
   [state message channel]
   (go
-    (swap! state update-in [:save-file] merge {:caption "Cannot save file"
+    (swap! state update-in [:save-file] merge {:caption   "Cannot save file"
                                                :exception message})
     (loop []
       (case (-> channel <! first)
@@ -185,9 +185,9 @@
 (defn new-file [state channel]
   (go
     (when (<! (close-file? state channel))
-      (swap! state assoc :opened-file {:id (next-opened-id state)
-                                       :name "untitled"
-                                       :text ""
+      (swap! state assoc :opened-file {:id     (next-opened-id state)
+                                       :name   "untitled"
+                                       :text   ""
                                        :dirty? true}))
     (swap-focus! state)))
 
@@ -203,11 +203,11 @@
               (recur)))
           (swap! state dissoc :open-file))
         (when (and path text)
-          (swap! state assoc :opened-file {:id (next-opened-id state)
-                                           :path path
-                                           :name name
+          (swap! state assoc :opened-file {:id              (next-opened-id state)
+                                           :path            path
+                                           :name            name
                                            :last-write-time last-write-time
-                                           :text text}))))
+                                           :text            text}))))
     (<! (load-folder state (root-path @state) channel))))
 
 (defn open-file [state channel path]
@@ -228,8 +228,8 @@
             (loop []
               (case (-> channel <! first)
                 :yes (let [path (get-in @state [:opened-file :path])]
-                         (swap! state dissoc :opened-file)
-                         (<! (do-open-file state channel path)))
+                       (swap! state dissoc :opened-file)
+                       (<! (do-open-file state channel path)))
                 :no (swap! state assoc-in [:opened-file :dirty?] true)
                 (recur)))
             (swap! state dissoc :reloaded-file)
@@ -255,16 +255,19 @@
                 min-left-width
                 client-x)]
     (swap! state assoc-in [:splitter :left-width] width)
-    :drag))
+    true))
 
 (defn splitter-down [state channel]
+  (swap! state assoc-in [:splitter :dragging] true)
   (go-loop
-    [drag-state :drag]
-    (let [[action [client-x]] (<! channel)]
-      (case [drag-state action]
-        [:drag :move] (recur (set-left-width! state client-x))
-        [:drag :up] nil
-        (recur drag-state)))))
+    []
+    (let [[action client-x] (<! channel)]
+      (if (case [(get-in @state [:splitter :dragging]) action]
+            [true :move] (set-left-width! state client-x)
+            [true :up] false
+            true)
+        (recur)
+        (swap! state update-in [:splitter] dissoc :dragging)))))
 
 (defn- path-or-name [opened-file]
   (if-let [path (:path opened-file)]
@@ -308,6 +311,7 @@
   (go
     (while true
       (let [[cmd arg] (<! ui-channel)]
+        (swap! state assoc :last-command [cmd arg])
         (case cmd
           ; status
           :hover (swap! state assoc :hover arg)
