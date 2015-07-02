@@ -5,7 +5,7 @@
             [ui.widgets :as widgets]
             [ui.debug :as debug]))
 
-(def z-count (atom 10))
+(defonce z-count (atom 10))
 
 (defn dialog [_]
   (reagent/create-class

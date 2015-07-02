@@ -10,84 +10,99 @@
       (f))
     nil))
 
-(defn button-style [style enabled? {:keys [active? hover? focus?]}]
-  (if enabled?
-    (if active?
-      {:color (:active-color style)
-       :background-color (:active style)
-       :border (str "1px solid " (:active style))}
-      (if (or hover? focus?)
-        {:color (:active style)
-         :border (str "1px solid " (:active style))}
-        {}))
-    {:cursor "default"
-     :color (:border-b style)
-     :border "1px solid transparent"}))
+(defn render-style-rule [[k v]]
+  (str (name k) ":" v ";"))
+
+(defn render-curly-braces [s]
+  (str "{" s "}"))
+
+(defn render-style [m]
+  (->> m
+       (map render-style-rule)
+       (apply str)
+       render-curly-braces))
+
+(defn render-widget-style [{:keys [id default hover focus active]}]
+  (str "#widget" id (render-style default)
+       "#widget" id ":hover" (render-style hover)
+       "#widget" id ":focus" (render-style focus)
+       "#widget" id ":active" (render-style active)))
+
+(defonce widget-id (atom 0))
+
+(defn button-style [id theme style-options enabled?]
+  {:id      id
+   :default (merge
+              {:display "inline-block"
+               :cursor  "pointer"
+               :margin  "2px"
+               :padding "2px 5px 4px 5px"
+               :color   (:color theme)
+               :border  "1px solid transparent"
+               :outline 0}
+              (:default style-options)
+              (if enabled?
+                {}
+                {:cursor "default"
+                 :color  (:border-b theme)
+                 :border "1px solid transparent"}))
+   :hover   (if enabled?
+              (merge
+                {:color  (:active theme)
+                 :border (str "1px solid " (:active theme))}
+                (:hover style-options))
+              {})
+   :focus   (if enabled?
+              (merge
+                {:color  (:active theme)
+                 :border (str "1px solid " (:active theme))}
+                (:focus style-options))
+              {})
+   :active  (if enabled?
+              (merge
+                {:color            (:active-color theme)
+                 :background-color (:active theme)
+                 :border           (str "1px solid " (:active theme))}
+                (:active style-options))
+              {})})
 
 ; style channel key title
 (defn button
   "required
-    style, channel, title
-   optional [key=default]
+    channel, theme, key, title, button-options
+   button-options [key=default]
     :tab-index=-1
     :style=nil
     :enabled?=true
-    :status=nil           When not nil, set as focus using the channel."
+    :status=nil"
   [_ _ _ _ _]
-  (let [state (reagent/atom {:active? false :hover? false :focus? false})]
+  (let [id (swap! widget-id inc)]
     (fn [channel theme key title button-options]
       (let [options (merge {:tab-index -1 :enabled? true} button-options)
-            activate (fn [] (when (:enabled? options) (swap! state assoc :active? true)) nil)
-            disactivate (fn [] (swap! state assoc :active? false) nil)
+            status (fn [k]
+                     (fn []
+                       (when (and (:enabled? options) (:status options))
+                         (put! channel [k (:status options)])
+                         nil)))
             action (fn [] (when (:enabled? options) (put! channel [key])) nil)]
         [:a
-         {:tabIndex (:tab-index options)
-          :on-focus (fn []
-                      (when-let [s (:status options)]
-                        (put! channel [:focus s]))
-                      (swap! state assoc :focus? true)
-                      nil)
-          :on-blur (fn []
-                     (when-let [s (:status options)]
-                       (put! channel [:blur]))
-                     (swap! state assoc :focus? false)
-                     (disactivate)
-                     nil)
-          :on-mouse-enter (fn []
-                            (when-let [s (:status options)]
-                              (put! channel [:hover s]))
-                            (swap! state assoc :hover? true)
-                            nil)
-          :on-mouse-down activate
-          :on-mouse-leave (fn []
-                            (when-let [s (:status options)]
-                              (put! channel [:unhover]))
-                            (swap! state assoc :hover? false)
-                            (disactivate)
-                            nil)
-          :on-mouse-up (fn [] (action) (disactivate))
-          :on-key-down activate
-          :on-key-up (key-down (fn [_] (action) (disactivate)))
-          :style (merge
-                   {:display "inline-block"
-                    :cursor "pointer"
-                    :margin "2px"
-                    :padding "2px 5px 4px 5px"
-                    :color (:color theme)
-                    :border "1px solid transparent"
-                    :outline 0}
-                   (button-style theme (:enabled? options) @state)
-                   (:style options))}
-         [:div {:style {:display "none"}} (debug/stringify @state)]
-         title]))))
-
-(def standard-widget-style
-  {:display "inline-block"
-   :width "100px"})
+         {:id             (str "widget" id)
+          :tabIndex       (:tab-index options)
+          :on-focus       (status :focus)
+          :on-blur        (status :blur)
+          :on-mouse-enter (status :hover)
+          :on-mouse-leave (status :unhover)
+          :on-mouse-up    action
+          :on-key-up      (key-down (fn [_] (action)))}
+         title
+         [:style {:style {:display "none"}}
+          (render-widget-style
+            (button-style id theme (:style options) (:enabled? options)))]]))))
 
 (def standard-button-style
-  (merge standard-widget-style
-    {:text-align "center"}))
+  {:display    "inline-block"
+   :width      "100px"
+   :text-align "center"})
 
 (def icon-style {:style {:margin-right "5px"}})
 
@@ -97,7 +112,7 @@
    theme
    key
    title
-   (merge options {:style (merge (:style options) standard-button-style)})])
+   (update-in options [:style :default] merge standard-button-style)])
 
 (defn positive-button [channel theme key caption options]
   [standard-button
