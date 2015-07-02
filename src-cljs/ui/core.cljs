@@ -9,13 +9,21 @@
             [ui.tree-view :refer [tree-view]]
             [ui.toolbar :refer [toolbar]]
             [ui.modal-dialog :as modal-dialog]
-            [ui.style :as style]
             [ui.debug :as debug]))
 
 (def initial-state
   {:splitter {:min-left-width 120
               :left-width     120}
-   :theme    style/default-theme})
+   :theme    {:color            "black"
+              :background       "#f7f7f7"                   ; light gray
+              :border-a         "#dddddd"                   ; gray
+              :border-b         "#999999"                   ; dark gray
+              :active-color     "white"
+              :active           "#007aff"                   ; blue
+              :font-family      "Segoe UI, Verdana, Tahoma, Arial"
+              :font-size        "12px"
+              :code-font-family "Consolas, monospace"
+              :code-font-size   "14px"}})
 
 (defn status [theme hover focus]
   [:div
@@ -38,16 +46,16 @@
 (defn main-component [channel state debug]
   [:div
    {:style {:-webkit-user-select "none"
-            :cursor         "default"
-            :position       "fixed"
-            :top            0
-            :right          0
-            :bottom         0
-            :left           0
-            :display        "flex"
-            :flex-direction "column"
-            :font-family    (:font-family (:theme state))
-            :font-size      (:font-size (:theme state))}}
+            :cursor              "default"
+            :position            "fixed"
+            :top                 0
+            :right               0
+            :bottom              0
+            :left                0
+            :display             "flex"
+            :flex-direction      "column"
+            :font-family         (:font-family (:theme state))
+            :font-size           (:font-size (:theme state))}}
    [:div
     {:style {:display        "flex"
              :flex-direction "column"
