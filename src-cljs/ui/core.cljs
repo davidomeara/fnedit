@@ -37,7 +37,8 @@
 
 (defn state-viewer [theme state]
   [:pre
-   {:style {:height     "50%"
+   {:style {:-webkit-user-select "text"
+            :height     "50%"
             :margin     0
             :overflow   "auto"
             :border-top (str "solid 1px " (:border-b theme))}}
