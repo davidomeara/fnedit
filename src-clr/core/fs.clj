@@ -1,3 +1,17 @@
+; Copyright 2016 David O'Meara
+;
+; Licensed under the Apache License, Version 2.0 (the "License");
+; you may not use this file except in compliance with the License.
+; You may obtain a copy of the License at
+;
+; http://www.apache.org/licenses/LICENSE-2.0
+;
+; Unless required by applicable law or agreed to in writing, software
+; distributed under the License is distributed on an "AS IS" BASIS,
+; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+; See the License for the specific language governing permissions and
+; limitations under the License.
+
 (assembly-load-with-partial-name "System.Windows.Forms")
 
 (ns core.fs
@@ -166,3 +180,26 @@
 
 (defn root-directory [path open _]
   (realize-directories [path] open))
+
+(defn create-directory
+  "Create a directory if it doesn't already exist."
+  [path directory-name _]
+  (try
+    {:status :success
+     :result (-> (Path/Combine path directory-name)
+                 Directory/CreateDirectory
+                 .get_FullName)}
+    (catch Exception e {:status :exception :result (.get_Message e)})))
+
+(defn read-file-write-default
+  "Reads file if it exists, if not write default text to file."
+  [path default _]
+  (try
+    {:status :success
+     :result (File/ReadAllText path)}
+    (catch Exception e
+      (let [saved-result (save path default _)]
+        (if (= (:status saved-result) :exception)
+          saved-result
+          {:status :success
+           :result default})))))

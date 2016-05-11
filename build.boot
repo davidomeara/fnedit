@@ -1,10 +1,24 @@
+; Copyright 2016 David O'Meara
+;
+; Licensed under the Apache License, Version 2.0 (the "License");
+; you may not use this file except in compliance with the License.
+; You may obtain a copy of the License at
+;
+; http://www.apache.org/licenses/LICENSE-2.0
+;
+; Unless required by applicable law or agreed to in writing, software
+; distributed under the License is distributed on an "AS IS" BASIS,
+; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+; See the License for the specific language governing permissions and
+; limitations under the License.
+
 (set-env!
   :source-paths #{}
   :resource-paths #{}
-  :dependencies '[[org.clojure/clojure "1.7.0-beta2"]
-                  [adzerk/boot-cljs "0.0-2814-4" :scope "test"]
-                  [org.clojure/clojurescript "0.0-3211" :scope "test"]
-                  [org.clojure/core.async "0.1.346.0-17112a-alpha" :scope "test"]
+  :dependencies '[[org.clojure/clojure "1.7.0"]
+                  [adzerk/boot-cljs "1.7.170-3" :scope "test"]
+                  [org.clojure/clojurescript "1.7.170" :scope "test"]
+                  [org.clojure/core.async"0.2.374" :scope "test"]
                   [reagent "0.5.0" :scope "test"]
                   [cljsjs/codemirror "5.1.0-0" :scope "test"]])
 
@@ -81,7 +95,7 @@
   (comp
     (with-pre-wrap fileset
       (let [compiler-dir (find-compiler-dir fileset)
-            tmp (temp-dir!)]
+            tmp (tmp-dir!)]
         (println "Compiling" namespaces)
         (pp (s/sh
               "cmd" "/C"
@@ -173,7 +187,7 @@
 
 (deftask input-to-output []
   (with-pre-wrap fileset
-    (let [tmp (temp-dir!)]
+    (let [tmp (tmp-dir!)]
       (doseq [in (input-files fileset)]
         (io/copy
           (tmpfile in)

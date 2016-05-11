@@ -1,5 +1,20 @@
+; Copyright 2016 David O'Meara
+;
+; Licensed under the Apache License, Version 2.0 (the "License");
+; you may not use this file except in compliance with the License.
+; You may obtain a copy of the License at
+;
+; http://www.apache.org/licenses/LICENSE-2.0
+;
+; Unless required by applicable law or agreed to in writing, software
+; distributed under the License is distributed on an "AS IS" BASIS,
+; WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+; See the License for the specific language governing permissions and
+; limitations under the License.
+
 (ns ui.core
-  (:require [cljs.core.async :refer [chan]]
+  (:require [cljs.pprint :refer [pprint]]
+            [cljs.core.async :refer [chan]]
             [reagent.core :as reagent]
             [ui.clr :as clr]
             [ui.events :as events]
@@ -42,7 +57,7 @@
             :margin     0
             :overflow   "auto"
             :border-top (str "solid 1px " (:border-b theme))}}
-   (debug/stringify state)])
+   (with-out-str (pprint state))])
 
 (defn main-component [channel state debug]
   [:div
