@@ -86,7 +86,7 @@ These build instructions are for building a standalone executable development ve
   - Tree view: [tree_view.cljs](src-cljs/ui/tree_view.cljs)
   - Horizontal splitter: [hsplitter.cljs](src-cljs/ui/hsplitter.cljs)
   - Wrapper around Codemirror: [editor.cljs](src-cljs/ui/editor.cljs)
-- User interface state is stored in a single atom.  Events are sent over a single core.async channel, look at the main function: [core.cljs](src-cljs/ui/core.cljs).  All swap! calls on the state atom occur after the process-commands function in [coordianation.cljs](src-cljs/ui/coordianation.cljs).
+- User interface state is stored in a single atom.  Events are sent over a single core.async channel, look at the main function: [core.cljs](src-cljs/ui/core.cljs).  All swap! calls on the state atom occur after the process-commands function in [coordianation.cljs](src-cljs/ui/coordination.cljs).
 - ClojureCLR on its own cannot create a Windows GUI exe.  Normally this would be done by creating a C# project which then calls ClojureCLR.  To avoid this hassel the subsystem can be modified with the ildasm program like the to-gui-subsystem task does in build.boot.  Also necessary is how the main function creates a special thread: [main.clj](src-clr/core/main.clj).  It would be nice if ClojureCLR had a gen-class argument which specified the subsystem.
 
 ## What similar projects are there?
